@@ -16,11 +16,14 @@ class CameraManager: NSObject, ObservableObject {
 
     func setup() async {
         let status = AVCaptureDevice.authorizationStatus(for: .video)
-        guard status == .authorized || (await AVCaptureDevice.requestAccess(for: .video)) else {
-            errorMessage = "需要相机权限"; return
+        if status != .authorized {
+            let granted = await AVCaptureDevice.requestAccess(for: .video)
+            guard granted else { errorMessage = "需要相机权限"; return }
         }
+
         session.beginConfiguration()
         session.sessionPreset = .photo
+
         guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
               let input = try? AVCaptureDeviceInput(device: device) else {
             errorMessage = "无法访问摄像头"; return
@@ -29,12 +32,15 @@ class CameraManager: NSObject, ObservableObject {
         if session.canAddOutput(photoOutput) { session.addOutput(photoOutput) }
         photoOutput.isLivePhotoCaptureEnabled = photoOutput.isLivePhotoCaptureSupported
         session.commitConfiguration()
+
         let layer = AVCaptureVideoPreviewLayer(session: session)
         layer.videoGravity = .resizeAspectFill
         previewLayer = layer
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            self?.session.startRunning()
-            DispatchQueue.main.async { self?.isReady = true }
+
+        let captureSession = session
+        Task.detached(priority: .userInitiated) {
+            captureSession.startRunning()
+            await MainActor.run { self.isReady = true }
         }
     }
 
@@ -52,7 +58,8 @@ class CameraManager: NSObject, ObservableObject {
 
     private func tryDeliver() {
         guard let imageData = pendingImageData, let movieURL = pendingMovieURL else { return }
-        pendingImageData = nil; pendingMovieURL = nil
+        pendingImageData = nil
+        pendingMovieURL = nil
         onCapture?(imageData, movieURL)
     }
 }
