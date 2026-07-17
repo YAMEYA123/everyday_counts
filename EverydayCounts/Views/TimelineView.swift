@@ -84,6 +84,7 @@ struct DayCellView: View {
     let store: EntryStore
     @Environment(\.modelContext) private var context
     @State private var thumbnail: UIImage?
+    @State private var isLive = false
 
     var body: some View {
         GeometryReader { geo in
@@ -99,6 +100,13 @@ struct DayCellView: View {
                 if entry != nil {
                     Text("\(day)").font(.system(size: 9)).foregroundStyle(.white.opacity(0.7)).padding(2)
                 }
+                if isLive {
+                    Image(systemName: "livephoto")
+                        .font(.system(size: 8, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                        .padding(3)
+                }
             }
             .frame(width: geo.size.width, height: geo.size.width)
             .clipShape(RoundedRectangle(cornerRadius: 4))
@@ -106,9 +114,10 @@ struct DayCellView: View {
         }
         .aspectRatio(1, contentMode: .fit)
         .task(id: entry?.assetIdentifier) {
-            guard let entry else { thumbnail = nil; return }
+            guard let entry else { thumbnail = nil; isLive = false; return }
             guard let asset = await store.restoreIfNeeded(entry: entry, context: context)
-            else { thumbnail = nil; return }
+            else { thumbnail = nil; isLive = false; return }
+            isLive = store.isLivePhoto(asset: asset)
             let opts = PHImageRequestOptions()
             opts.deliveryMode = .opportunistic
             opts.isNetworkAccessAllowed = false

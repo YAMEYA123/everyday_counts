@@ -87,6 +87,11 @@ class EntryStore: ObservableObject {
         PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil).firstObject
     }
 
+    func isLivePhoto(asset: PHAsset) -> Bool {
+        PHAssetResource.assetResources(for: asset)
+            .contains { $0.type == .pairedVideo }
+    }
+
     // MARK: - Album
 
     func ensureAlbumExists() async -> PHAssetCollection? {
