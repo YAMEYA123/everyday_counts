@@ -1,6 +1,7 @@
 import Foundation
 import Photos
 import SwiftData
+import UIKit
 import WidgetKit
 
 @MainActor
