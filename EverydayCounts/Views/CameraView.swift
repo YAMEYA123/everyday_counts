@@ -42,16 +42,31 @@ struct CameraView: View {
 
 struct PreviewLayerView: UIViewRepresentable {
     let layer: AVCaptureVideoPreviewLayer
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView()
-        layer.frame = view.bounds
-        view.layer.addSublayer(layer)
+
+    func makeUIView(context: Context) -> PreviewUIView {
+        let view = PreviewUIView()
+        view.previewLayer = layer
         return view
     }
-    func updateUIView(_ uiView: UIView, context: Context) {
+
+    func updateUIView(_ uiView: PreviewUIView, context: Context) {}
+}
+
+class PreviewUIView: UIView {
+    var previewLayer: AVCaptureVideoPreviewLayer? {
+        didSet {
+            guard let layer = previewLayer else { return }
+            layer.frame = bounds
+            layer.videoGravity = .resizeAspectFill
+            self.layer.addSublayer(layer)
+        }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        layer.frame = uiView.bounds
+        previewLayer?.frame = bounds
         CATransaction.commit()
     }
 }
