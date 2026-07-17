@@ -45,11 +45,13 @@ struct PreviewLayerView: UIViewRepresentable {
     func makeUIView(context: Context) -> UIView {
         let view = UIView()
         layer.frame = view.bounds
-        layer.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.layer.addSublayer(layer)
         return view
     }
     func updateUIView(_ uiView: UIView, context: Context) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
         layer.frame = uiView.bounds
+        CATransaction.commit()
     }
 }
