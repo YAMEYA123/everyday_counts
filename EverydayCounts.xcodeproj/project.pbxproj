@@ -74,9 +74,9 @@
 				AA0000000000000000000014 /* EverydayCountsApp.swift */,
 				AA0000000000000000000015 /* ContentView.swift */,
 				AA0000000000000000000016 /* Assets.xcassets */,
-				AA000000000000000000002C /* Models */,
-				AA000000000000000000002D /* Managers */,
-				AA000000000000000000002E /* Views */,
+				AA0000000000000000000030 /* Models */,
+				AA0000000000000000000031 /* Managers */,
+				AA0000000000000000000032 /* Views */,
 				AA0000000000000000000005 /* Preview Content */,
 			);
 			path = EverydayCounts;
@@ -90,7 +90,7 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
-		AA000000000000000000002C /* Models */ = {
+		AA0000000000000000000030 /* Models */ = {
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000018 /* DailyEntry.swift */,
@@ -98,7 +98,7 @@
 			path = Models;
 			sourceTree = "<group>";
 		};
-		AA000000000000000000002D /* Managers */ = {
+		AA0000000000000000000031 /* Managers */ = {
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000019 /* EntryStore.swift */,
@@ -109,7 +109,7 @@
 			path = Managers;
 			sourceTree = "<group>";
 		};
-		AA000000000000000000002E /* Views */ = {
+		AA0000000000000000000032 /* Views */ = {
 			isa = PBXGroup;
 			children = (
 				AA000000000000000000001D /* TodayView.swift */,
