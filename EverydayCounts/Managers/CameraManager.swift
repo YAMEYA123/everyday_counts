@@ -96,7 +96,12 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
         guard let data = photo.fileDataRepresentation() else { return }
         Task { @MainActor in
             self.pendingImageData = data
-            self.scheduleDeliver()
+            // If Live Photo is off, deliver immediately without waiting
+            if !self.photoOutput.isLivePhotoCaptureEnabled {
+                self.deliver()
+            } else {
+                self.scheduleDeliver()
+            }
         }
     }
 
