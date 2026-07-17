@@ -21,6 +21,10 @@ class CameraManager: NSObject, ObservableObject {
             let granted = await AVCaptureDevice.requestAccess(for: .video)
             guard granted else { errorMessage = "需要相机权限"; return }
         }
+        // Pre-request microphone for Live Photo
+        if AVCaptureDevice.authorizationStatus(for: .audio) != .authorized {
+            await AVCaptureDevice.requestAccess(for: .audio)
+        }
 
         session.beginConfiguration()
         session.sessionPreset = .photo
@@ -31,7 +35,8 @@ class CameraManager: NSObject, ObservableObject {
         }
         if session.canAddInput(input) { session.addInput(input) }
         if session.canAddOutput(photoOutput) { session.addOutput(photoOutput) }
-        photoOutput.isLivePhotoCaptureEnabled = photoOutput.isLivePhotoCaptureSupported
+        // Disable Live Photo for now to avoid microphone permission issues
+        photoOutput.isLivePhotoCaptureEnabled = false
         session.commitConfiguration()
 
         let layer = AVCaptureVideoPreviewLayer(session: session)
