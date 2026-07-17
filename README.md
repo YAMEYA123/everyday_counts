@@ -15,7 +15,7 @@ A minimalist daily photo diary for iOS. One photo per day — one moment, one me
 - **防误删备份 Auto Restore** — 照片保存至系统相册专属「Everyday Counts」相册，同时写入本地备份；从相册删除后下次打开自动还原
 - **时间线 Timeline** — 月历视图浏览每天的记录，支持点击全屏预览 Live Photo
 - **回顾视频 Recap Video** — 一键生成月 / 年滑动回顾视频（每张 1.5 秒）
-- **连续打卡 Streak** — 统计连续记录天数，🔥 显示在今日页
+- **连续打卡 Streak** — 统计连续记录天数，✦ 显示在今日页
 - **桌面小组件 Widget** — 小 / 中尺寸，展示今日打卡状态与缩略图
 - **每日提醒 Reminder** — 可自定义提醒时间，打卡后当天自动取消
 
@@ -30,6 +30,11 @@ A minimalist daily photo diary for iOS. One photo per day — one moment, one me
 | 小组件 | WidgetKit + App Group |
 | 通知 | UNUserNotificationCenter |
 | 视频生成 | AVAssetWriter |
+
+## 设计 Design
+
+- 应用图标：黑色主色调，浮动日历格样式（白色细线圆角方格 + 顶部标题栏 + 装订孔 + 中心圆点），与应用整体暗黑极简风格一致
+- App icon: black-primary, floating calendar tile (white-outlined rounded rect, header strip, binding rings, center dot), consistent with the dark minimalist in-app aesthetic
 
 ## 环境要求 Requirements
 
