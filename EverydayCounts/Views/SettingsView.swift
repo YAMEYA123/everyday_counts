@@ -34,6 +34,22 @@ struct SettingsView: View {
                         Text("开启后需要允许通知权限。如已拒绝，请去「设置 → 通知 → EverydayCounts」手动开启。")
                     }
                 }
+
+                Section {
+                    HStack {
+                        Text("版本")
+                        Spacer()
+                        Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")
+                            .foregroundStyle(.secondary)
+                    }
+                    HStack {
+                        Text("理念")
+                        Spacer()
+                        Text("每天只有一次").foregroundStyle(.secondary).font(.caption)
+                    }
+                } header: {
+                    Text("关于")
+                }
             }
             .scrollContentBackground(.hidden)
             .background(Color.black)

@@ -11,6 +11,9 @@ struct TodayView: View {
     @State private var livePhoto: PHLivePhoto?
     @State private var isPlayingLive = false
     @State private var showCamera = false
+    @State private var showRetakeConfirm = false
+    @State private var streak = 0
+    @AppStorage("hasShownLiveHint") private var hasShownLiveHint = false
 
     private var todayKey: String {
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
@@ -21,10 +24,19 @@ struct TodayView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    Text(formattedDate())
-                        .font(.subheadline).foregroundStyle(.white.opacity(0.4))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal)
+                    HStack {
+                        Text(formattedDate())
+                            .font(.subheadline).foregroundStyle(.white.opacity(0.4))
+                        Spacer()
+                        if streak > 0 {
+                            HStack(spacing: 4) {
+                                Text("🔥").font(.subheadline)
+                                Text("连续 \(streak) 天")
+                                    .font(.subheadline).foregroundStyle(.orange.opacity(0.9))
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
 
                     if thumbnail != nil || livePhoto != nil {
                         ZStack(alignment: .topTrailing) {
@@ -35,6 +47,7 @@ struct TodayView: View {
                                     .clipShape(RoundedRectangle(cornerRadius: 16))
                                     .onLongPressGesture(minimumDuration: 0.3) {
                                         isPlayingLive = true
+                                        hasShownLiveHint = true
                                     }
                             } else if let img = thumbnail {
                                 Image(uiImage: img)
@@ -52,8 +65,19 @@ struct TodayView: View {
                         }
                         .padding(.horizontal)
 
-                        Button("重新拍摄") { showCamera = true }
-                            .font(.subheadline).foregroundStyle(.white.opacity(0.5))
+                        if livePhoto != nil && !hasShownLiveHint {
+                            Text("长按体验 Live Photo ✦")
+                                .font(.caption).foregroundStyle(.white.opacity(0.35))
+                        }
+
+                        Button("重新拍摄") { showRetakeConfirm = true }
+                            .font(.subheadline).foregroundStyle(.white.opacity(0.4))
+                            .confirmationDialog("今天的照片将被替换", isPresented: $showRetakeConfirm, titleVisibility: .visible) {
+                                Button("确定重拍", role: .destructive) { showCamera = true }
+                                Button("取消", role: .cancel) {}
+                            } message: {
+                                Text("每天只有一次机会，确定要重拍吗？")
+                            }
                     } else {
                         Button { showCamera = true } label: {
                             VStack(spacing: 16) {
@@ -134,6 +158,7 @@ struct TodayView: View {
             livePhoto = nil
         }
 
+        streak = store.currentStreak(context: context)
         NotificationManager.shared.cancelTodayReminder()
     }
 

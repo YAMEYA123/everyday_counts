@@ -92,6 +92,31 @@ class EntryStore: ObservableObject {
             .contains { $0.type == .pairedVideo }
     }
 
+    func currentStreak(context: ModelContext) -> Int {
+        let cal = Calendar.current
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+        var streak = 0
+        var checkDate = Date()
+        // If today not yet recorded, start checking from yesterday
+        let todayKey = f.string(from: checkDate)
+        let todayEntry = entry(for: todayKey, context: context)
+        if todayEntry == nil {
+            guard let yesterday = cal.date(byAdding: .day, value: -1, to: checkDate) else { return 0 }
+            checkDate = yesterday
+        }
+        while true {
+            let key = f.string(from: checkDate)
+            if entry(for: key, context: context) != nil {
+                streak += 1
+                guard let prev = cal.date(byAdding: .day, value: -1, to: checkDate) else { break }
+                checkDate = prev
+            } else {
+                break
+            }
+        }
+        return streak
+    }
+
     // MARK: - Album
 
     func ensureAlbumExists() async -> PHAssetCollection? {

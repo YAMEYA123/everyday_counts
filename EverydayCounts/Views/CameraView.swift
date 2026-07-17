@@ -6,6 +6,7 @@ struct CameraView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var camera = CameraManager()
     @State private var pinchBaseZoom: CGFloat = 1.0
+    @State private var shutterFlash = false
 
     var body: some View {
         ZStack {
@@ -57,6 +58,13 @@ struct CameraView: View {
                             .fill(Color.white.opacity(0.05))
                             .aspectRatio(3.0 / 4.0, contentMode: .fit)
                     }
+                    // Shutter flash overlay
+                    if shutterFlash {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.white.opacity(0.75))
+                            .aspectRatio(3.0 / 4.0, contentMode: .fit)
+                            .allowsHitTesting(false)
+                    }
                     // Zoom label overlay
                     Text(camera.zoomLabel)
                         .font(.system(size: 12, weight: .semibold, design: .rounded))
@@ -88,7 +96,13 @@ struct CameraView: View {
                 }
 
                 // Shutter
-                Button { camera.capturePhoto() } label: {
+                Button {
+                    shutterFlash = true
+                    camera.capturePhoto()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        shutterFlash = false
+                    }
+                } label: {
                     Circle()
                         .strokeBorder(.white, lineWidth: 3)
                         .frame(width: 72, height: 72)
