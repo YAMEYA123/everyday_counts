@@ -1,10 +1,39 @@
 import Foundation
 import Photos
 import SwiftData
+import WidgetKit
 
 @MainActor
 class EntryStore: ObservableObject {
     static let albumName = "Everyday Counts"
+
+    // MARK: - Widget shared data
+
+    private static let appGroupID = "group.com.yameya.everyday-counts"
+    private static let thumbFilename = "widget_thumb.jpg"
+
+    private static func writeWidgetData(imageData: Data, date: String) {
+        let defaults = UserDefaults(suiteName: appGroupID)
+        defaults?.set(date, forKey: "widget_checked_date")
+        // Write a small thumbnail for the widget
+        if let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) {
+            let url = container.appendingPathComponent(thumbFilename)
+            if let img = UIImage(data: imageData),
+               let resized = resizeImage(img, maxSide: 300),
+               let jpeg = resized.jpegData(compressionQuality: 0.7) {
+                try? jpeg.write(to: url, options: .atomic)
+            }
+        }
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    private static func resizeImage(_ image: UIImage, maxSide: CGFloat) -> UIImage? {
+        let size = image.size
+        let scale = min(maxSide / size.width, maxSide / size.height)
+        let newSize = CGSize(width: size.width * scale, height: size.height * scale)
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        return renderer.image { _ in image.draw(in: CGRect(origin: .zero, size: newSize)) }
+    }
 
     // MARK: - Local backup directory
 
@@ -88,6 +117,8 @@ class EntryStore: ObservableObject {
     func saveLivePhoto(imageData: Data, videoURL: URL?, date: String, context: ModelContext) async throws -> String {
         // Always write a local backup so we can restore if the user deletes from Photos
         EntryStore.saveBackup(imageData: imageData, date: date)
+        // Write shared data for widget
+        EntryStore.writeWidgetData(imageData: imageData, date: date)
 
         guard let album = await ensureAlbumExists() else {
             throw NSError(domain: "EntryStore", code: 1)

@@ -22,6 +22,8 @@
 		AA000000000000000000002E /* LivePhotoFullscreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000020 /* LivePhotoFullscreen.swift */; };
 		AA000000000000000000002F /* ReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000021 /* ReviewView.swift */; };
 		AA000000000000000000003A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003B /* SettingsView.swift */; };
+		BB00000000000000000000F7 /* EverydayCountsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00000000000000000000F4 /* EverydayCountsWidget.swift */; };
+		BB0000000000000000000102 /* EverydayCountsWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BB00000000000000000000F1 /* EverydayCountsWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,10 +43,36 @@
 		AA0000000000000000000020 /* LivePhotoFullscreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivePhotoFullscreen.swift; sourceTree = "<group>"; };
 		AA0000000000000000000021 /* ReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewView.swift; sourceTree = "<group>"; };
 		AA000000000000000000003B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		BB00000000000000000000F1 /* EverydayCountsWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = EverydayCountsWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB00000000000000000000F4 /* EverydayCountsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EverydayCountsWidget.swift; sourceTree = "<group>"; };
+		BB00000000000000000000F5 /* EverydayCountsWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EverydayCountsWidget.entitlements; sourceTree = "<group>"; };
+		BB00000000000000000000F6 /* EverydayCounts.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EverydayCounts.entitlements; sourceTree = "<group>"; };
+		BB00000000000000000000F3A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		BB0000000000000000000101 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				BB0000000000000000000102 /* EverydayCountsWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		AA000000000000000000000B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BB00000000000000000000F9 /* Frameworks (Widget) */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -58,14 +86,26 @@
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000004 /* EverydayCounts */,
+				BB00000000000000000000F3 /* EverydayCountsWidget */,
 				AA0000000000000000000002 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		BB00000000000000000000F3 /* EverydayCountsWidget */ = {
+			isa = PBXGroup;
+			children = (
+				BB00000000000000000000F4 /* EverydayCountsWidget.swift */,
+				BB00000000000000000000F3A /* Info.plist */,
+				BB00000000000000000000F5 /* EverydayCountsWidget.entitlements */,
+			);
+			path = EverydayCountsWidget;
 			sourceTree = "<group>";
 		};
 		AA0000000000000000000002 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000003 /* EverydayCounts.app */,
+				BB00000000000000000000F1 /* EverydayCountsWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -76,6 +116,7 @@
 				AA0000000000000000000014 /* EverydayCountsApp.swift */,
 				AA0000000000000000000015 /* ContentView.swift */,
 				AA0000000000000000000016 /* Assets.xcassets */,
+				BB00000000000000000000F6 /* EverydayCounts.entitlements */,
 				AA0000000000000000000030 /* Models */,
 				AA0000000000000000000031 /* Managers */,
 				AA0000000000000000000032 /* Views */,
@@ -134,6 +175,7 @@
 				AA0000000000000000000009 /* Sources */,
 				AA000000000000000000000B /* Frameworks */,
 				AA000000000000000000000A /* Resources */,
+				BB0000000000000000000101 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
@@ -143,6 +185,23 @@
 			productName = EverydayCounts;
 			productReference = AA0000000000000000000003 /* EverydayCounts.app */;
 			productType = "com.apple.product-type.application";
+		};
+		BB00000000000000000000FB /* EverydayCountsWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BB00000000000000000000FE /* Build configuration list for PBXNativeTarget "EverydayCountsWidget" */;
+			buildPhases = (
+				BB00000000000000000000F8 /* Sources */,
+				BB00000000000000000000F9 /* Frameworks (Widget) */,
+				BB00000000000000000000FA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = EverydayCountsWidget;
+			productName = EverydayCountsWidget;
+			productReference = BB00000000000000000000F1 /* EverydayCountsWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -155,6 +214,9 @@
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					AA000000000000000000000C = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					BB00000000000000000000FB = {
 						CreatedOnToolsVersion = 26.0;
 					};
 				};
@@ -175,6 +237,7 @@
 			projectRoot = "";
 			targets = (
 				AA000000000000000000000C /* EverydayCounts */,
+				BB00000000000000000000FB /* EverydayCountsWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -186,6 +249,13 @@
 			files = (
 				AA0000000000000000000025 /* Preview Assets.xcassets in Resources */,
 				AA0000000000000000000024 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BB00000000000000000000FA /* Resources (Widget) */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -209,6 +279,14 @@
 				AA000000000000000000002E /* LivePhotoFullscreen.swift in Sources */,
 				AA000000000000000000002F /* ReviewView.swift in Sources */,
 				AA000000000000000000003A /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BB00000000000000000000F8 /* Sources (Widget) */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB00000000000000000000F7 /* EverydayCountsWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -309,11 +387,56 @@
 			};
 			name = Release;
 		};
+		BB00000000000000000000FC /* Debug (Widget) */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = EverydayCountsWidget/EverydayCountsWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = EverydayCountsWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.yameya.everyday-counts.widget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		BB00000000000000000000FD /* Release (Widget) */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = EverydayCountsWidget/EverydayCountsWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = EverydayCountsWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.yameya.everyday-counts.widget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 		AA0000000000000000000012 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = EverydayCounts/EverydayCounts.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -346,6 +469,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = EverydayCounts/EverydayCounts.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -390,6 +514,15 @@
 			buildConfigurations = (
 				AA0000000000000000000012 /* Debug */,
 				AA0000000000000000000013 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BB00000000000000000000FE /* Build configuration list for PBXNativeTarget "EverydayCountsWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB00000000000000000000FC /* Debug (Widget) */,
+				BB00000000000000000000FD /* Release (Widget) */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
