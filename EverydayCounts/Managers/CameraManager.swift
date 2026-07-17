@@ -51,10 +51,14 @@ class CameraManager: NSObject, ObservableObject {
         deliverTask?.cancel()
 
         let settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.hevc])
-        if photoOutput.isLivePhotoCaptureEnabled {
+        let liveSupported = photoOutput.isLivePhotoCaptureSupported && photoOutput.isLivePhotoCaptureEnabled
+        if liveSupported {
             let url = FileManager.default.temporaryDirectory
                 .appendingPathComponent(UUID().uuidString).appendingPathExtension("mov")
             settings.livePhotoMovieFileURL = url
+            print("Live Photo enabled, movie URL:", url.lastPathComponent)
+        } else {
+            print("Live Photo NOT supported, shooting static")
         }
         photoOutput.capturePhoto(with: settings, delegate: self)
     }
