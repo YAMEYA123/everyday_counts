@@ -33,6 +33,13 @@ class EntryStore: ObservableObject {
     }
 
     func ensureAlbumExists() async -> PHAssetCollection? {
+        // Request full read/write access if not already granted
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        if status != .authorized && status != .limited {
+            let granted = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
+            guard granted == .authorized || granted == .limited else { return nil }
+        }
+
         let albums = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil)
         var found: PHAssetCollection?
         albums.enumerateObjects { col, _, stop in
