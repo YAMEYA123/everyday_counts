@@ -146,6 +146,12 @@ class EntryStore: ObservableObject {
     // MARK: - Save (with local backup)
 
     func saveLivePhoto(imageData: Data, videoURL: URL?, date: String, context: ModelContext) async throws -> String {
+        // If retaking today, remove old photo from the album first (keep it in user's library)
+        if let existing = entry(for: date, context: context),
+           let oldAsset = resolveAsset(identifier: existing.assetIdentifier) {
+            await removeFromAlbum(asset: oldAsset)
+        }
+
         // Always write a local backup so we can restore if the user deletes from Photos
         EntryStore.saveBackup(imageData: imageData, date: date)
         // Write shared data for widget
@@ -157,6 +163,19 @@ class EntryStore: ObservableObject {
         let assetID = try await writeToPhotoLibrary(imageData: imageData, videoURL: videoURL, album: album)
         save(date: date, assetIdentifier: assetID, context: context)
         return assetID
+    }
+
+    /// Remove an asset from the "Everyday Counts" album without deleting it from the library.
+    private func removeFromAlbum(asset: PHAsset) async {
+        let albums = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil)
+        var target: PHAssetCollection?
+        albums.enumerateObjects { col, _, stop in
+            if col.localizedTitle == EntryStore.albumName { target = col; stop.pointee = true }
+        }
+        guard let album = target else { return }
+        try? await PHPhotoLibrary.shared().performChanges {
+            PHAssetCollectionChangeRequest(for: album)?.removeAssets([asset] as NSArray)
+        }
     }
 
     private func writeToPhotoLibrary(imageData: Data, videoURL: URL?, album: PHAssetCollection) async throws -> String {
