@@ -1,62 +1,52 @@
 from PIL import Image, ImageDraw
 
 SIZE = 1024
-img = Image.new("RGB", (SIZE, SIZE), color="#1E1E1E")  # 深炭灰背景
+img = Image.new("RGB", (SIZE, SIZE), color="#141414")  # 深炭灰背景
 draw = ImageDraw.Draw(img)
 
-TILE_W, TILE_H = 440, 480
+TILE_W, TILE_H = 460, 500
 TILE_X = (SIZE - TILE_W) // 2
-TILE_Y = (SIZE - TILE_H) // 2 + 10
-RADIUS = 52
-LINE_W = 9
+TILE_Y = (SIZE - TILE_H) // 2 + 8
+RADIUS = 56
 
-HEADER_H = 110
-header_color = "#2A2A2A"
+HEADER_H = 120
+BODY_Y = TILE_Y + HEADER_H
 
-# Header
+# Header: dark / near-black
 draw.rounded_rectangle(
     [TILE_X, TILE_Y, TILE_X + TILE_W, TILE_Y + TILE_H],
-    radius=RADIUS, fill=header_color
+    radius=RADIUS, fill="#1C1C1C"
 )
-# Body
-BODY_Y = TILE_Y + HEADER_H
-draw.rectangle([TILE_X, BODY_Y, TILE_X + TILE_W, TILE_Y + TILE_H], fill="#1A1A1A")
+# Fix top corners of body (straight join at divider)
+draw.rectangle([TILE_X, BODY_Y, TILE_X + TILE_W, TILE_Y + TILE_H], fill="#FFFFFF")
 draw.rounded_rectangle(
     [TILE_X, BODY_Y, TILE_X + TILE_W, TILE_Y + TILE_H],
-    radius=RADIUS, fill="#1A1A1A"
+    radius=RADIUS, fill="#FFFFFF"
 )
-draw.rectangle(
-    [TILE_X, TILE_Y + RADIUS, TILE_X + TILE_W, BODY_Y],
-    fill=header_color
-)
+draw.rectangle([TILE_X, TILE_Y + RADIUS, TILE_X + TILE_W, BODY_Y], fill="#1C1C1C")
 
 # Binding holes
-HOLE_R = 18
-HOLE_Y = TILE_Y - HOLE_R + 6
+HOLE_R = 20
+HOLE_Y = TILE_Y - HOLE_R + 8
 for hx in [TILE_X + TILE_W // 3, TILE_X + 2 * TILE_W // 3]:
     draw.ellipse([hx - HOLE_R, HOLE_Y - HOLE_R, hx + HOLE_R, HOLE_Y + HOLE_R],
-                 fill="#1E1E1E")
+                 fill="#141414")
 
-# Divider
-draw.line([(TILE_X, BODY_Y), (TILE_X + TILE_W, BODY_Y)], fill="#3A3A3A", width=2)
+# Divider line (sharp separation header / body)
+draw.line([(TILE_X, BODY_Y), (TILE_X + TILE_W, BODY_Y)], fill="#E0E0E0", width=2)
 
-# Outline
+# Tile outline (subtle, on white body blends into white)
 draw.rounded_rectangle(
     [TILE_X, TILE_Y, TILE_X + TILE_W, TILE_Y + TILE_H],
-    radius=RADIUS, outline="#E8E8E8", width=LINE_W
+    radius=RADIUS, outline="#DDDDDD", width=3
 )
 
-# Center dot
-body_center_x = SIZE // 2
-body_center_y = BODY_Y + (TILE_Y + TILE_H - BODY_Y) // 2 + 6
-DOT_R = 52
-draw.ellipse(
-    [body_center_x - DOT_R, body_center_y - DOT_R,
-     body_center_x + DOT_R, body_center_y + DOT_R],
-    fill="#F0F0F0"
-)
+# Center dot (dark on white body)
+cx = SIZE // 2
+cy = BODY_Y + (TILE_Y + TILE_H - BODY_Y) // 2 + 4
+DOT_R = 54
+draw.ellipse([cx - DOT_R, cy - DOT_R, cx + DOT_R, cy + DOT_R], fill="#1A1A1A")
 
 REPO = "/datadisk/loomi-ait/volumes/u-d414d4ccdc9a1daf8d8409bd38243f28/sessions/9eb2c364-50ed-479f-b813-cd392cfe7576/repos/everyday_counts-963b3825"
 img.save(f"{REPO}/icon_previews/icon_black_A.png")
-img.save(f"{REPO}/EverydayCounts/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png")
 print("done")
