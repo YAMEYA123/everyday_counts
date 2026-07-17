@@ -71,7 +71,7 @@ struct TimelineView: View {
 
     private func load() async {
         let entries = store.entries(year: year, month: month, context: context)
-        entryMap = Dictionary(uniqueKeysWithValues: entries.map { ($0.date, $0) })
+        entryMap = Dictionary(entries.map { ($0.date, $0) }, uniquingKeysWith: { _, last in last })
     }
     private func prevMonth() { if month == 1 { year -= 1; month = 12 } else { month -= 1 } }
     private func nextMonth() { if month == 12 { year += 1; month = 1 } else { month += 1 } }

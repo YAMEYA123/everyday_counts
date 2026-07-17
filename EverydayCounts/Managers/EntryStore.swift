@@ -7,6 +7,11 @@ class EntryStore: ObservableObject {
     static let albumName = "Everyday Counts"
 
     func save(date: String, assetIdentifier: String, context: ModelContext) {
+        // Remove any existing entry for the same date to prevent duplicates
+        let descriptor = FetchDescriptor<DailyEntry>(predicate: #Predicate { $0.date == date })
+        if let existing = try? context.fetch(descriptor) {
+            existing.forEach { context.delete($0) }
+        }
         let entry = DailyEntry(date: date, assetIdentifier: assetIdentifier)
         context.insert(entry)
         try? context.save()
