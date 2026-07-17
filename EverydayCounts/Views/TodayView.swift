@@ -16,35 +16,43 @@ struct TodayView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                Color.black.ignoresSafeArea()
-                if let img = thumbnail {
-                    Image(uiImage: img)
-                        .resizable().scaledToFill().ignoresSafeArea()
-                        .overlay(Color.black.opacity(0.15))
-                    VStack {
-                        Spacer()
+            ScrollView {
+                VStack(spacing: 16) {
+                    Text(formattedDate())
+                        .font(.subheadline).foregroundStyle(.white.opacity(0.4))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+
+                    if let img = thumbnail {
+                        // 3:4 photo card
+                        Image(uiImage: img)
+                            .resizable().scaledToFill()
+                            .frame(maxWidth: .infinity)
+                            .aspectRatio(3.0 / 4.0, contentMode: .fit)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .padding(.horizontal)
+
                         Button("重新拍摄") { showCamera = true }
-                            .font(.subheadline).foregroundStyle(.white.opacity(0.6))
-                            .padding(.bottom, 120)
-                    }
-                } else {
-                    VStack(spacing: 24) {
-                        Text(formattedDate())
-                            .font(.title3).foregroundStyle(.white.opacity(0.5))
+                            .font(.subheadline).foregroundStyle(.white.opacity(0.5))
+                    } else {
+                        // Empty state — same 3:4 proportions
                         Button { showCamera = true } label: {
-                            VStack(spacing: 12) {
-                                Image(systemName: "camera.fill").font(.system(size: 44))
+                            VStack(spacing: 16) {
+                                Image(systemName: "camera.fill").font(.system(size: 48))
                                 Text("记录今天").font(.headline)
                             }
                             .foregroundStyle(.white)
-                            .frame(width: 160, height: 160)
-                            .background(.white.opacity(0.08))
-                            .clipShape(RoundedRectangle(cornerRadius: 24))
+                            .frame(maxWidth: .infinity)
+                            .aspectRatio(3.0 / 4.0, contentMode: .fit)
+                            .background(Color.white.opacity(0.06))
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .padding(.horizontal)
                         }
                     }
                 }
+                .padding(.top, 8)
             }
+            .background(Color.black)
             .navigationTitle("今天")
             .navigationBarTitleDisplayMode(.large)
         }

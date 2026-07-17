@@ -58,7 +58,7 @@ struct CameraView: View {
                             .aspectRatio(3.0 / 4.0, contentMode: .fit)
                     }
                     // Zoom label overlay
-                    Text(String(format: "%.1f×", camera.zoomFactor))
+                    Text(camera.zoomLabel)
                         .font(.system(size: 12, weight: .semibold, design: .rounded))
                         .foregroundStyle(.white.opacity(0.8))
                         .padding(.horizontal, 8).padding(.vertical, 4)
@@ -70,12 +70,12 @@ struct CameraView: View {
                 Spacer()
 
                 // Zoom presets
-                if camera.availableZooms.count > 1 {
+                if camera.zoomPresets.count > 1 {
                     HStack(spacing: 16) {
-                        ForEach(camera.availableZooms, id: \.self) { z in
-                            let isActive = abs(camera.zoomFactor - z) < 0.05
-                            Button { camera.setZoom(z) } label: {
-                                Text(zoomLabel(z))
+                        ForEach(camera.zoomPresets) { preset in
+                            let isActive = abs(camera.zoomFactor - preset.factor) < 0.05
+                            Button { camera.setZoom(preset.factor) } label: {
+                                Text(preset.label)
                                     .font(.system(size: 13, weight: isActive ? .bold : .regular))
                                     .foregroundStyle(isActive ? .yellow : .white.opacity(0.7))
                                     .frame(width: 40, height: 40)
@@ -106,11 +106,6 @@ struct CameraView: View {
         }
     }
 
-    private func zoomLabel(_ factor: CGFloat) -> String {
-        if factor < 1.0 { return "0.5×" }
-        if abs(factor - 1.0) < 0.1 { return "1×" }
-        return "\(Int(factor.rounded()))×"
-    }
 }
 
 struct PreviewLayerView: UIViewRepresentable {

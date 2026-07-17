@@ -7,6 +7,12 @@ enum FlashMode { case off, auto, on
     var avMode: AVCaptureDevice.FlashMode { switch self { case .off: return .off; case .auto: return .auto; case .on: return .on } }
 }
 
+struct ZoomPreset: Identifiable {
+    let id = UUID()
+    let label: String   // e.g. "0.5×", "1×", "3×"
+    let factor: CGFloat // actual AVCaptureDevice videoZoomFactor
+}
+
 @MainActor
 class CameraManager: NSObject, ObservableObject {
     @Published var previewLayer: AVCaptureVideoPreviewLayer?
@@ -14,8 +20,11 @@ class CameraManager: NSObject, ObservableObject {
     @Published var errorMessage: String?
     @Published var flashMode: FlashMode = .off
     @Published var isLiveEnabled = false
+    /// Raw AVCaptureDevice videoZoomFactor (not human-readable multiplier)
     @Published var zoomFactor: CGFloat = 1.0
-    @Published var availableZooms: [CGFloat] = [1.0]
+    @Published var zoomPresets: [ZoomPreset] = []
+    /// The device factor that equals "1×" (wide camera)
+    private(set) var wideZoomFactor: CGFloat = 1.0
 
     private let session = AVCaptureSession()
     private let photoOutput = AVCapturePhotoOutput()
@@ -25,6 +34,14 @@ class CameraManager: NSObject, ObservableObject {
     private var deliverTask: Task<Void, Never>?
 
     var onCapture: ((Data, URL?) -> Void)?
+
+    /// Human-readable zoom label (relative to wide = 1×)
+    var zoomLabel: String {
+        guard wideZoomFactor > 0 else { return "1×" }
+        let relative = zoomFactor / wideZoomFactor
+        if relative < 1.0 { return String(format: "%.1f×", relative) }
+        return String(format: relative.truncatingRemainder(dividingBy: 1) == 0 ? "%.0f×" : "%.1f×", relative)
+    }
 
     func setup() async {
         let status = AVCaptureDevice.authorizationStatus(for: .video)
@@ -39,7 +56,6 @@ class CameraManager: NSObject, ObservableObject {
         session.beginConfiguration()
         session.sessionPreset = .photo
 
-        // Try to get a multi-camera discovery session for zoom presets
         let discovery = AVCaptureDevice.DiscoverySession(
             deviceTypes: [.builtInTripleCamera, .builtInDualWideCamera, .builtInDualCamera, .builtInWideAngleCamera],
             mediaType: .video, position: .back)
@@ -51,20 +67,36 @@ class CameraManager: NSObject, ObservableObject {
         if session.canAddInput(input) { session.addInput(input) }
         if session.canAddOutput(photoOutput) { session.addOutput(photoOutput) }
 
-        // Compute available zoom presets from virtual device
-        var zooms: [CGFloat] = []
-        if let factors = (device as AnyObject).virtualDeviceSwitchOverVideoZoomFactors as? [NSNumber], !factors.isEmpty {
-            // ultrawide is at factor 1 on some devices; wide is factors[0]
-            let wideIdx = factors.first.map { CGFloat(truncating: $0) } ?? 2.0
-            if wideIdx > 1.0 { zooms.append(1.0) }   // ultrawide
-            zooms.append(wideIdx)                      // wide (1x)
-            if factors.count >= 2 {
-                zooms.append(CGFloat(truncating: factors[1]))  // tele
+        // Build zoom presets.
+        // virtualDeviceSwitchOverVideoZoomFactors: e.g. [2, 6] means
+        //   device factor 1..2  → ultrawide (0.5×)
+        //   device factor 2..6  → wide (1×)
+        //   device factor 6+    → tele (3×)
+        let switchFactors = device.virtualDeviceSwitchOverVideoZoomFactors.map { CGFloat(truncating: $0) }
+        var presets: [ZoomPreset] = []
+        if switchFactors.isEmpty {
+            // Single camera — factor 1.0 = 1×
+            wideZoomFactor = device.minAvailableVideoZoomFactor
+            presets = [ZoomPreset(label: "1×", factor: wideZoomFactor)]
+        } else {
+            let wideFactor = switchFactors[0]   // device factor for 1× (wide)
+            wideZoomFactor = wideFactor
+            let minFactor = device.minAvailableVideoZoomFactor
+            if minFactor < wideFactor {
+                presets.append(ZoomPreset(label: "0.5×", factor: minFactor))
+            }
+            presets.append(ZoomPreset(label: "1×", factor: wideFactor))
+            if switchFactors.count >= 2 {
+                let teleFactor = switchFactors[1]
+                let teleMultiplier = teleFactor / wideFactor
+                let teleLabel = teleMultiplier.truncatingRemainder(dividingBy: 1) == 0
+                    ? "\(Int(teleMultiplier))×" : String(format: "%.1f×", teleMultiplier)
+                presets.append(ZoomPreset(label: teleLabel, factor: teleFactor))
             }
         }
-        if zooms.isEmpty { zooms = [1.0] }
-        availableZooms = zooms
-        zoomFactor = zooms.contains(where: { abs($0 - 1.0) < 0.1 }) ? 1.0 : zooms.first ?? 1.0
+        zoomPresets = presets
+        // Default to wide (1×)
+        zoomFactor = wideZoomFactor
 
         // Live Photo: enable only if mic is authorized
         let micOK = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
@@ -94,11 +126,12 @@ class CameraManager: NSObject, ObservableObject {
 
     func setZoom(_ factor: CGFloat) {
         guard let device = currentDevice else { return }
+        let clamped = max(device.minAvailableVideoZoomFactor,
+                          min(factor, device.maxAvailableVideoZoomFactor))
         try? device.lockForConfiguration()
-        device.videoZoomFactor = max(device.minAvailableVideoZoomFactor,
-                                     min(factor, device.maxAvailableVideoZoomFactor))
+        device.videoZoomFactor = clamped
         device.unlockForConfiguration()
-        zoomFactor = factor
+        zoomFactor = clamped
     }
 
     func capturePhoto() {
