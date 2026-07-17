@@ -107,11 +107,20 @@ struct DayCellView: View {
             guard let id = entry?.assetIdentifier,
                   let asset = PHAsset.fetchAssets(withLocalIdentifiers: [id], options: nil).firstObject
             else { thumbnail = nil; return }
+            let opts = PHImageRequestOptions()
+            opts.deliveryMode = .opportunistic
+            opts.isNetworkAccessAllowed = false
             thumbnail = await withCheckedContinuation { cont in
+                var resumed = false
                 PHImageManager.default().requestImage(
                     for: asset, targetSize: CGSize(width: 100, height: 100),
-                    contentMode: .aspectFill, options: nil
-                ) { img, _ in cont.resume(returning: img) }
+                    contentMode: .aspectFill, options: opts
+                ) { img, info in
+                    let isDegraded = (info?[PHImageResultIsDegradedKey] as? Bool) ?? false
+                    guard !isDegraded, !resumed else { return }
+                    resumed = true
+                    cont.resume(returning: img)
+                }
             }
         }
     }

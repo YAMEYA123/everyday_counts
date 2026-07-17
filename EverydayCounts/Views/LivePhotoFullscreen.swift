@@ -35,11 +35,20 @@ struct LivePhotoFullscreen: View {
         guard let asset = PHAsset.fetchAssets(
             withLocalIdentifiers: [entry.assetIdentifier], options: nil
         ).firstObject else { return }
+        let opts = PHLivePhotoRequestOptions()
+        opts.deliveryMode = .opportunistic
+        opts.isNetworkAccessAllowed = false
         livePhoto = await withCheckedContinuation { cont in
+            var resumed = false
             PHImageManager.default().requestLivePhoto(
                 for: asset, targetSize: UIScreen.main.bounds.size,
-                contentMode: .aspectFit, options: nil
-            ) { photo, _ in cont.resume(returning: photo) }
+                contentMode: .aspectFit, options: opts
+            ) { photo, info in
+                let isDegraded = (info?[PHImageResultIsDegradedKey] as? Bool) ?? false
+                guard !isDegraded, !resumed else { return }
+                resumed = true
+                cont.resume(returning: photo)
+            }
         }
     }
 }
