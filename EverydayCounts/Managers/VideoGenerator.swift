@@ -8,7 +8,7 @@ class VideoGenerator {
             .appendingPathComponent(UUID().uuidString).appendingPathExtension("mp4")
         let W = 1080, H = 1920
         let FPS: Int32 = 30
-        let secsPerPhoto = 3.0
+        let secsPerPhoto = 1.5
 
         let writer = try AVAssetWriter(outputURL: outputURL, fileType: .mp4)
         let videoSettings: [String: Any] = [
