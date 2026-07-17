@@ -34,19 +34,37 @@ struct CameraView: View {
                 }
                 .padding(.top, 8)
 
-                // Viewfinder — 4:3 ratio, not full screen
-                if let layer = camera.previewLayer {
-                    GeometryReader { geo in
-                        PreviewLayerView(layer: layer)
-                            .frame(width: geo.size.width, height: geo.size.width * 4 / 3)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-                    .aspectRatio(3.0 / 4.0, contentMode: .fit)
-                    .padding(.horizontal, 0)
-                } else {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.white.opacity(0.05))
+                // Viewfinder — 4:3 ratio, pinch to zoom
+                ZStack(alignment: .bottomTrailing) {
+                    if let layer = camera.previewLayer {
+                        GeometryReader { geo in
+                            PreviewLayerView(layer: layer)
+                                .frame(width: geo.size.width, height: geo.size.width * 4 / 3)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
                         .aspectRatio(3.0 / 4.0, contentMode: .fit)
+                        .gesture(
+                            MagnificationGesture()
+                                .onChanged { scale in
+                                    camera.setZoom(pinchBaseZoom * scale)
+                                }
+                                .onEnded { scale in
+                                    pinchBaseZoom = camera.zoomFactor
+                                }
+                        )
+                    } else {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.white.opacity(0.05))
+                            .aspectRatio(3.0 / 4.0, contentMode: .fit)
+                    }
+                    // Zoom label overlay
+                    Text(String(format: "%.1f×", camera.zoomFactor))
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(Color.black.opacity(0.4))
+                        .clipShape(Capsule())
+                        .padding(10)
                 }
 
                 Spacer()
