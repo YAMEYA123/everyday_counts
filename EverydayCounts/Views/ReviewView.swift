@@ -37,7 +37,7 @@ struct ReviewView: View {
 
                         VStack(spacing: 8) {
                             row("已记录", "\(entries.count) 张照片")
-                            row("预计时长", "约 \(entries.count * 3) 秒")
+                            row("预计时长", "约 \(Int((Double(entries.count) * 1.5).rounded())) 秒")
                         }
                         .padding().background(Color.white.opacity(0.05))
                         .clipShape(RoundedRectangle(cornerRadius: 16))
