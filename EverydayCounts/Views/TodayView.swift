@@ -115,7 +115,10 @@ struct TodayView: View {
         todayEntry = store.entry(for: todayKey, context: context)
         guard let entry = todayEntry,
               let asset = await store.restoreIfNeeded(entry: entry, context: context) else {
-            thumbnail = nil; livePhoto = nil; return
+            thumbnail = nil; livePhoto = nil
+            // No photo today — refresh notification schedule so decay slots are current
+            NotificationManager.shared.scheduleDailyReminder()
+            return
         }
 
         // Load static thumbnail always (fallback)
