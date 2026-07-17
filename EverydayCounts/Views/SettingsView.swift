@@ -45,7 +45,9 @@ struct SettingsView: View {
                     HStack {
                         Text("理念")
                         Spacer()
-                        Text("每天只有一次").foregroundStyle(.secondary).font(.caption)
+                        Text("Every day, once. Every day counts.")
+                            .foregroundStyle(.secondary).font(.caption)
+                            .multilineTextAlignment(.trailing)
                     }
                 } header: {
                     Text("关于")

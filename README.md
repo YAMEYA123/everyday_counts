@@ -1,45 +1,53 @@
-# Everyday Counts
+# EverydayCounts
 
-每天一张照片，记录生活流动。
+> Every day, once. Every day counts.
+> 每天一次，每天都值得。
 
-## 功能
+一款极简的每日影像日记 iOS 应用。每天只能拍一张照片——一个瞬间，一段记忆，错过即永久失去。
 
-- **今天** — 拍摄或选取当日照片，压缩保存到本地
-- **时间线** — 月历视图浏览历史照片，点击全屏预览
-- **回顾** — 将本月或本年照片生成幻灯片视频并下载
+A minimalist daily photo diary for iOS. One photo per day — one moment, one memory, gone if you miss it.
 
-## 技术栈
+---
 
-- Next.js 16 + React 19 + TypeScript
-- Tailwind CSS 4
-- Dexie.js（IndexedDB，本地存储）
-- Canvas API + MediaRecorder（视频生成）
-- PWA（可添加到 iOS 主屏幕）
-- Cloudflare Pages（静态部署）
+## 功能 Features
 
-## 数据存储
+- **每日拍摄 Daily Capture** — 支持 Live Photo，4:3 取景框，闪光灯 / 变焦控制，手势捏合调焦
+- **防误删备份 Auto Restore** — 照片保存至系统相册专属「Everyday Counts」相册，同时写入本地备份；从相册删除后下次打开自动还原
+- **时间线 Timeline** — 月历视图浏览每天的记录，支持点击全屏预览 Live Photo
+- **回顾视频 Recap Video** — 一键生成月 / 年滑动回顾视频（每张 1.5 秒）
+- **连续打卡 Streak** — 统计连续记录天数，🔥 显示在今日页
+- **桌面小组件 Widget** — 小 / 中尺寸，展示今日打卡状态与缩略图
+- **每日提醒 Reminder** — 可自定义提醒时间，打卡后当天自动取消
 
-所有照片存储在**设备本地的 IndexedDB**，不上传任何服务器。
+## 技术栈 Tech Stack
 
-## 本地开发
+| 层 | 技术 |
+|---|---|
+| UI | SwiftUI |
+| 数据持久化 | SwiftData |
+| 相机 | AVFoundation（AVCaptureSession + AVCapturePhotoOutput） |
+| 相册 | PhotosUI（PHPhotoLibrary、PHLivePhotoView） |
+| 小组件 | WidgetKit + App Group |
+| 通知 | UNUserNotificationCenter |
+| 视频生成 | AVAssetWriter |
+
+## 环境要求 Requirements
+
+- iOS 17+
+- Xcode 16+
+- Bundle ID：`com.yameya.everyday-counts`
+- App Group：`group.com.yameya.everyday-counts`
+
+## 构建 Build
 
 ```bash
-npm install
-npm run dev
+git clone <repo>
+open EverydayCounts.xcodeproj
+# 在 Xcode 中 Signing & Capabilities 选择自己的 Team，然后 Run
 ```
 
-## 部署
+> 首次运行需在「设置 → 隐私 → 照片」授予完整访问权限，通知权限在应用内开启。
 
-连接 GitHub 仓库到 Cloudflare Pages，构建命令：
+---
 
-```bash
-npm run build
-```
-
-输出目录：`out`
-
-## 路线图
-
-- [ ] iOS 原生版（Swift/SwiftUI）
-- [ ] Live Photo 支持
-- [ ] CloudKit 多端同步
+*每天只有一次机会，活在当下。*
