@@ -16,7 +16,6 @@ class EntryStore: ObservableObject {
     private static func writeWidgetData(imageData: Data, date: String) {
         let defaults = UserDefaults(suiteName: appGroupID)
         defaults?.set(date, forKey: "widget_checked_date")
-        // Write a small thumbnail for the widget
         if let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) {
             let url = container.appendingPathComponent(thumbFilename)
             if let img = UIImage(data: imageData),
@@ -46,15 +45,27 @@ class EntryStore: ObservableObject {
     }
 
     private static func backupURL(for date: String) -> URL {
-        backupDir.appendingPathComponent("\(date).heic")
+        backupDir.appendingPathComponent("\(date).jpg")
     }
 
     private static func saveBackup(imageData: Data, date: String) {
-        try? imageData.write(to: backupURL(for: date), options: .atomic)
+        // Compress to ~1500px JPEG (~300 KB) instead of storing full-res HEIC (~3-5 MB)
+        let data: Data
+        if let img = UIImage(data: imageData),
+           let resized = resizeImage(img, maxSide: 1500),
+           let jpeg = resized.jpegData(compressionQuality: 0.75) {
+            data = jpeg
+        } else {
+            data = imageData
+        }
+        try? data.write(to: backupURL(for: date), options: .atomic)
     }
 
     private static func loadBackup(for date: String) -> Data? {
-        try? Data(contentsOf: backupURL(for: date))
+        // Try new .jpg path first, fall back to legacy .heic
+        if let data = try? Data(contentsOf: backupURL(for: date)) { return data }
+        let legacyURL = backupDir.appendingPathComponent("\(date).heic")
+        return try? Data(contentsOf: legacyURL)
     }
 
     // MARK: - SwiftData helpers
@@ -97,7 +108,6 @@ class EntryStore: ObservableObject {
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
         var streak = 0
         var checkDate = Date()
-        // If today not yet recorded, start checking from yesterday
         let todayKey = f.string(from: checkDate)
         let todayEntry = entry(for: todayKey, context: context)
         if todayEntry == nil {
@@ -146,15 +156,13 @@ class EntryStore: ObservableObject {
     // MARK: - Save (with local backup)
 
     func saveLivePhoto(imageData: Data, videoURL: URL?, date: String, context: ModelContext) async throws -> String {
-        // If retaking today, remove old photo from the album first (keep it in user's library)
+        // If retaking today, remove old photo from the album (keep it in user's main library)
         if let existing = entry(for: date, context: context),
            let oldAsset = resolveAsset(identifier: existing.assetIdentifier) {
             await removeFromAlbum(asset: oldAsset)
         }
 
-        // Always write a local backup so we can restore if the user deletes from Photos
         EntryStore.saveBackup(imageData: imageData, date: date)
-        // Write shared data for widget
         EntryStore.writeWidgetData(imageData: imageData, date: date)
 
         guard let album = await ensureAlbumExists() else {
@@ -199,12 +207,9 @@ class EntryStore: ObservableObject {
 
     // MARK: - Restore if deleted
 
-    /// Checks whether the PHAsset still exists; if deleted, re-saves from local backup.
-    /// Returns the (possibly updated) asset identifier, or nil if backup is missing too.
     func restoreIfNeeded(entry: DailyEntry, context: ModelContext) async -> PHAsset? {
         if let asset = resolveAsset(identifier: entry.assetIdentifier) { return asset }
 
-        // PHAsset gone — try local backup
         guard let backupData = EntryStore.loadBackup(for: entry.date),
               let album = await ensureAlbumExists() else { return nil }
 
