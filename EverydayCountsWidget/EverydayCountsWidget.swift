@@ -1,5 +1,6 @@
 import WidgetKit
 import SwiftUI
+import UIKit
 
 private let appGroupID = "group.com.yameya.everyday-counts"
 private let thumbFilename = "widget_thumb.jpg"
