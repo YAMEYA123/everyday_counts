@@ -4,16 +4,20 @@ struct SettingsView: View {
     @State private var reminderDate = NotificationManager.shared.reminderDate
     @State private var isAuthorized = false
     @State private var showPermissionAlert = false
+    @AppStorage("reminderEnabled") private var reminderEnabled = false
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
                     Toggle("每日打卡提醒", isOn: Binding(
-                        get: { isAuthorized },
+                        get: { reminderEnabled && isAuthorized },
                         set: { on in
                             if on { Task { await enableReminder() } }
-                            else { NotificationManager.shared.cancelAllReminders() }
+                            else {
+                                reminderEnabled = false
+                                NotificationManager.shared.cancelAllReminders()
+                            }
                         }
                     ))
                     .tint(.yellow)
@@ -76,9 +80,11 @@ struct SettingsView: View {
         let ok = await NotificationManager.shared.requestPermission()
         if ok {
             isAuthorized = true
+            reminderEnabled = true
             NotificationManager.shared.scheduleDailyReminder()
         } else {
             isAuthorized = false
+            reminderEnabled = false
             showPermissionAlert = true
         }
     }

@@ -44,6 +44,7 @@ class NotificationManager {
     /// Schedule the next 7 days of reminders (3 decay slots per day).
     /// Automatically skips today if the user has already taken a photo.
     func scheduleDailyReminder() {
+        guard UserDefaults.standard.bool(forKey: "reminderEnabled") else { return }
         let hasTakenToday = self.hasTakenToday()
         let cal = Calendar.current
         let now = Date()
