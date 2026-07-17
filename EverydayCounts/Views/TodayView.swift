@@ -67,11 +67,20 @@ struct TodayView: View {
               let asset = store.resolveAsset(identifier: entry.assetIdentifier) else {
             thumbnail = nil; return
         }
+        let options = PHImageRequestOptions()
+        options.deliveryMode = .opportunistic
+        options.isNetworkAccessAllowed = false
         thumbnail = await withCheckedContinuation { cont in
+            var resumed = false
             PHImageManager.default().requestImage(
                 for: asset, targetSize: CGSize(width: 400, height: 800),
-                contentMode: .aspectFill, options: nil
-            ) { img, _ in cont.resume(returning: img) }
+                contentMode: .aspectFill, options: options
+            ) { img, info in
+                let isDegraded = (info?[PHImageResultIsDegradedKey] as? Bool) ?? false
+                guard !isDegraded, !resumed else { return }
+                resumed = true
+                cont.resume(returning: img)
+            }
         }
         NotificationManager.shared.cancelTodayReminder()
     }
