@@ -50,7 +50,7 @@ class EntryStore: ObservableObject {
         return PHAssetCollection.fetchAssetCollections(withLocalIdentifiers: [id], options: nil).firstObject
     }
 
-    func saveLivePhoto(imageData: Data, videoURL: URL, date: String, context: ModelContext) async throws -> String {
+    func saveLivePhoto(imageData: Data, videoURL: URL?, date: String, context: ModelContext) async throws -> String {
         guard let album = await ensureAlbumExists() else {
             throw NSError(domain: "EntryStore", code: 1)
         }
@@ -58,9 +58,11 @@ class EntryStore: ObservableObject {
         try await PHPhotoLibrary.shared().performChanges {
             let req = PHAssetCreationRequest.forAsset()
             req.addResource(with: .photo, data: imageData, options: nil)
-            let opts = PHAssetResourceCreationOptions()
-            opts.shouldMoveFile = true
-            req.addResource(with: .pairedVideo, fileURL: videoURL, options: opts)
+            if let videoURL = videoURL {
+                let opts = PHAssetResourceCreationOptions()
+                opts.shouldMoveFile = true
+                req.addResource(with: .pairedVideo, fileURL: videoURL, options: opts)
+            }
             if let ph = req.placeholderForCreatedAsset {
                 assetID = ph.localIdentifier
                 PHAssetCollectionChangeRequest(for: album)?.addAssets([ph] as NSArray)

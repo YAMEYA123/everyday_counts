@@ -11,8 +11,9 @@ class CameraManager: NSObject, ObservableObject {
     private let photoOutput = AVCapturePhotoOutput()
     private var pendingImageData: Data?
     private var pendingMovieURL: URL?
+    private var deliverTask: Task<Void, Never>?
 
-    var onCapture: ((Data, URL) -> Void)?
+    var onCapture: ((Data, URL?) -> Void)?
 
     func setup() async {
         let status = AVCaptureDevice.authorizationStatus(for: .video)
@@ -45,6 +46,10 @@ class CameraManager: NSObject, ObservableObject {
     }
 
     func capturePhoto() {
+        pendingImageData = nil
+        pendingMovieURL = nil
+        deliverTask?.cancel()
+
         let settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.hevc])
         if photoOutput.isLivePhotoCaptureEnabled {
             let url = FileManager.default.temporaryDirectory
@@ -56,11 +61,23 @@ class CameraManager: NSObject, ObservableObject {
 
     func stop() { session.stopRunning() }
 
-    private func tryDeliver() {
-        guard let imageData = pendingImageData, let movieURL = pendingMovieURL else { return }
+    private func scheduleDeliver() {
+        deliverTask?.cancel()
+        deliverTask = Task {
+            // Wait up to 2s for Live Photo movie; then deliver whatever we have
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            guard !Task.isCancelled else { return }
+            deliver()
+        }
+    }
+
+    private func deliver() {
+        guard let imageData = pendingImageData else { return }
+        let movie = pendingMovieURL
         pendingImageData = nil
         pendingMovieURL = nil
-        onCapture?(imageData, movieURL)
+        deliverTask = nil
+        onCapture?(imageData, movie)
     }
 }
 
@@ -68,13 +85,22 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
     nonisolated func photoOutput(_ output: AVCapturePhotoOutput,
                                   didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         guard let data = photo.fileDataRepresentation() else { return }
-        Task { @MainActor in self.pendingImageData = data; self.tryDeliver() }
+        Task { @MainActor in
+            self.pendingImageData = data
+            self.scheduleDeliver()
+        }
     }
 
     nonisolated func photoOutput(_ output: AVCapturePhotoOutput,
                                   didFinishProcessingLivePhotoToMovieFileAt url: URL,
                                   duration: CMTime, photoDisplayTime: CMTime,
                                   resolvedSettings: AVCaptureResolvedPhotoSettings, error: Error?) {
-        Task { @MainActor in self.pendingMovieURL = url; self.tryDeliver() }
+        Task { @MainActor in
+            self.pendingMovieURL = url
+            // If image already arrived, deliver now instead of waiting
+            if self.pendingImageData != nil {
+                self.deliver()
+            }
+        }
     }
 }

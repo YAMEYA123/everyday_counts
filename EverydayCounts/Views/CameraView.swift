@@ -2,7 +2,7 @@ import SwiftUI
 import AVFoundation
 
 struct CameraView: View {
-    let onCapture: (Data, URL) -> Void
+    let onCapture: (Data, URL?) -> Void
     @Environment(\.dismiss) private var dismiss
     @StateObject private var camera = CameraManager()
 

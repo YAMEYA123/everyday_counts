@@ -54,6 +54,7 @@ struct TodayView: View {
                 Task { await savePhoto(imageData: imageData, movieURL: movieURL) }
             }
         }
+
         .task { await load() }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
             Task { await load() }
@@ -75,7 +76,7 @@ struct TodayView: View {
         NotificationManager.shared.cancelTodayReminder()
     }
 
-    private func savePhoto(imageData: Data, movieURL: URL) async {
+    private func savePhoto(imageData: Data, movieURL: URL?) async {
         let authStatus = PHPhotoLibrary.authorizationStatus(for: .addOnly)
         if authStatus != .authorized && authStatus != .limited {
             let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
