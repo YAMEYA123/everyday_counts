@@ -21,7 +21,7 @@ struct CameraView: View {
                     Spacer()
                 }
                 Spacer()
-                Button { camera.capturePhoto() } label: {
+                Button { print("SHUTTER TAPPED"); camera.capturePhoto() } label: {
                     Circle()
                         .strokeBorder(.white, lineWidth: 3)
                         .frame(width: 72, height: 72)
