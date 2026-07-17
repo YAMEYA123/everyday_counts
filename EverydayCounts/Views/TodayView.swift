@@ -77,8 +77,10 @@ struct TodayView: View {
 
     private func savePhoto(imageData: Data, movieURL: URL) async {
         let authStatus = PHPhotoLibrary.authorizationStatus(for: .addOnly)
-        guard authStatus == .authorized ||
-              (await PHPhotoLibrary.requestAuthorization(for: .addOnly) == .authorized) else { return }
+        if authStatus != .authorized {
+            let granted = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+            guard granted == .authorized else { return }
+        }
         do {
             _ = try await store.saveLivePhoto(
                 imageData: imageData, videoURL: movieURL, date: todayKey, context: context
