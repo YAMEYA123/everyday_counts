@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import Photos
+import PhotosUI
 
 struct TodayView: View {
     @Environment(\.modelContext) private var context
