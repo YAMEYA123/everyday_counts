@@ -64,7 +64,7 @@ struct TodayView: View {
     private func load() async {
         todayEntry = store.entry(for: todayKey, context: context)
         guard let entry = todayEntry,
-              let asset = store.resolveAsset(identifier: entry.assetIdentifier) else {
+              let asset = await store.restoreIfNeeded(entry: entry, context: context) else {
             thumbnail = nil; return
         }
         let options = PHImageRequestOptions()

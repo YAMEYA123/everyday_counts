@@ -5,6 +5,7 @@ struct CameraView: View {
     let onCapture: (Data, URL?) -> Void
     @Environment(\.dismiss) private var dismiss
     @StateObject private var camera = CameraManager()
+    @State private var pinchBaseZoom: CGFloat = 1.0
 
     var body: some View {
         ZStack {

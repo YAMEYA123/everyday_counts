@@ -51,7 +51,7 @@ struct TimelineView: View {
                         }
                         ForEach(1...daysInMonth, id: \.self) { day in
                             let key = String(format: "%04d-%02d-%02d", year, month, day)
-                            DayCellView(day: day, entry: entryMap[key], isToday: key == todayKey)
+                            DayCellView(day: day, entry: entryMap[key], isToday: key == todayKey, store: store)
                                 .onTapGesture { if let e = entryMap[key] { preview = e } }
                         }
                     }
@@ -81,6 +81,8 @@ struct DayCellView: View {
     let day: Int
     let entry: DailyEntry?
     let isToday: Bool
+    let store: EntryStore
+    @Environment(\.modelContext) private var context
     @State private var thumbnail: UIImage?
 
     var body: some View {
@@ -104,8 +106,8 @@ struct DayCellView: View {
         }
         .aspectRatio(1, contentMode: .fit)
         .task(id: entry?.assetIdentifier) {
-            guard let id = entry?.assetIdentifier,
-                  let asset = PHAsset.fetchAssets(withLocalIdentifiers: [id], options: nil).firstObject
+            guard let entry else { thumbnail = nil; return }
+            guard let asset = await store.restoreIfNeeded(entry: entry, context: context)
             else { thumbnail = nil; return }
             let opts = PHImageRequestOptions()
             opts.deliveryMode = .opportunistic
