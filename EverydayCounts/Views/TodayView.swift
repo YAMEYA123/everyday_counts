@@ -30,9 +30,10 @@ struct TodayView: View {
                         Spacer()
                         if streak > 0 {
                             HStack(spacing: 4) {
-                                Text("🔥").font(.subheadline)
+                                Text("✦")
+                                    .font(.system(size: 11)).foregroundStyle(.white.opacity(0.45))
                                 Text("连续 \(streak) 天")
-                                    .font(.subheadline).foregroundStyle(.orange.opacity(0.9))
+                                    .font(.subheadline).foregroundStyle(.white.opacity(0.55))
                             }
                         }
                     }
