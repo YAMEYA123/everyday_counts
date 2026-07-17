@@ -84,6 +84,11 @@ class NotificationManager {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ids)
     }
 
+    /// Cancel all pending reminders (call when user turns off the reminder toggle).
+    func cancelAllReminders() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: allIdentifiers(daysAhead: 8))
+    }
+
     func isAuthorized() async -> Bool {
         let settings = await UNUserNotificationCenter.current().notificationSettings()
         return settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional

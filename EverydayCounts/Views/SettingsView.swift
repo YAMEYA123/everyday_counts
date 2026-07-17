@@ -13,7 +13,7 @@ struct SettingsView: View {
                         get: { isAuthorized },
                         set: { on in
                             if on { Task { await enableReminder() } }
-                            else { NotificationManager.shared.cancelTodayReminder() }
+                            else { NotificationManager.shared.cancelAllReminders() }
                         }
                     ))
                     .tint(.yellow)
