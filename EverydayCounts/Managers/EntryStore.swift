@@ -2,6 +2,7 @@ import Foundation
 import Photos
 import SwiftData
 import UIKit
+import AVFoundation
 import WidgetKit
 
 @MainActor
@@ -68,6 +69,21 @@ class EntryStore: ObservableObject {
         return try? Data(contentsOf: legacyURL)
     }
 
+    private static var liveVideoCacheDir: URL {
+        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        let dir = caches.appendingPathComponent("everyday-counts-live", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
+    private static func safeAssetId(_ id: String) -> String {
+        id.replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: ":", with: "_")
+    }
+
+    private static func liveMovieURL(for assetIdentifier: String) -> URL {
+        liveVideoCacheDir.appendingPathComponent("\(safeAssetId(assetIdentifier)).mov")
+    }
+
     // MARK: - SwiftData helpers
 
     func save(date: String, assetIdentifier: String, context: ModelContext) {
@@ -101,6 +117,42 @@ class EntryStore: ObservableObject {
     func isLivePhoto(asset: PHAsset) -> Bool {
         PHAssetResource.assetResources(for: asset)
             .contains { $0.type == .pairedVideo }
+    }
+
+    func pairedMovieURL(for asset: PHAsset) async -> URL? {
+        guard let resource = PHAssetResource.assetResources(for: asset)
+            .first(where: { $0.type == .pairedVideo }) else {
+            return nil
+        }
+
+        let cacheURL = Self.liveMovieURL(for: asset.localIdentifier)
+        if let attrs = try? FileManager.default.attributesOfItem(atPath: cacheURL.path),
+           let size = attrs[.size] as? NSNumber,
+           size.intValue > 0 {
+            return cacheURL
+        }
+        if FileManager.default.fileExists(atPath: cacheURL.path) {
+            try? FileManager.default.removeItem(at: cacheURL)
+        }
+
+        do {
+            let extractedURL = try await withCheckedThrowingContinuation { continuation in
+                let options = PHAssetResourceRequestOptions()
+                options.isNetworkAccessAllowed = true
+
+                PHAssetResourceManager.default().writeData(for: resource, toFile: cacheURL, options: options) { error in
+                    if let error = error {
+                        continuation.resume(throwing: error)
+                    } else {
+                        continuation.resume(returning: cacheURL)
+                    }
+                }
+            }
+            return extractedURL
+        } catch {
+            print("paired movie extract error:", error)
+            return nil
+        }
     }
 
     func currentStreak(context: ModelContext) -> Int {

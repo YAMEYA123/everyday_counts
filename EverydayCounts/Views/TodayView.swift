@@ -1,15 +1,15 @@
 import SwiftUI
 import SwiftData
 import Photos
-import PhotosUI
+import AVFoundation
 
 struct TodayView: View {
     @Environment(\.modelContext) private var context
     @StateObject private var store = EntryStore()
     @State private var todayEntry: DailyEntry?
     @State private var thumbnail: UIImage?
-    @State private var livePhoto: PHLivePhoto?
-    @State private var isPlayingLive = false
+    @State private var liveMovieURL: URL?
+    @State private var playTrigger = 0
     @State private var showCamera = false
     @State private var showRetakeConfirm = false
     @State private var streak = 0
@@ -39,15 +39,19 @@ struct TodayView: View {
                     }
                     .padding(.horizontal)
 
-                    if thumbnail != nil || livePhoto != nil {
+                    if thumbnail != nil || liveMovieURL != nil {
                         ZStack(alignment: .topTrailing) {
-                            if let lp = livePhoto {
-                                LivePhotoCardView(livePhoto: lp, isPlaying: $isPlayingLive)
+                            if let movieURL = liveMovieURL {
+                                LivePhotoMovieView(
+                                    url: movieURL,
+                                    videoGravity: .resizeAspectFill,
+                                    playTrigger: playTrigger
+                                )
                                     .frame(maxWidth: .infinity)
                                     .aspectRatio(3.0 / 4.0, contentMode: .fit)
                                     .clipShape(RoundedRectangle(cornerRadius: 16))
                                     .onLongPressGesture(minimumDuration: 0.3) {
-                                        isPlayingLive = true
+                                        playTrigger += 1
                                         hasShownLiveHint = true
                                     }
                             } else if let img = thumbnail {
@@ -57,7 +61,7 @@ struct TodayView: View {
                                     .aspectRatio(3.0 / 4.0, contentMode: .fit)
                                     .clipShape(RoundedRectangle(cornerRadius: 16))
                             }
-                            if livePhoto != nil {
+                            if liveMovieURL != nil {
                                 Image(systemName: "livephoto")
                                     .font(.system(size: 16, weight: .medium))
                                     .foregroundStyle(.white.opacity(0.85))
@@ -66,7 +70,7 @@ struct TodayView: View {
                         }
                         .padding(.horizontal)
 
-                        if livePhoto != nil && !hasShownLiveHint {
+                        if liveMovieURL != nil && !hasShownLiveHint {
                             Text("长按体验 Live Photo ✦")
                                 .font(.caption).foregroundStyle(.white.opacity(0.35))
                         }
@@ -116,8 +120,7 @@ struct TodayView: View {
         todayEntry = store.entry(for: todayKey, context: context)
         guard let entry = todayEntry,
               let asset = await store.restoreIfNeeded(entry: entry, context: context) else {
-            thumbnail = nil; livePhoto = nil
-            // No photo today — refresh notification schedule so decay slots are current
+            thumbnail = nil; liveMovieURL = nil
             NotificationManager.shared.scheduleDailyReminder()
             return
         }
@@ -139,27 +142,10 @@ struct TodayView: View {
             }
         }
 
-        // Load Live Photo if available
         if store.isLivePhoto(asset: asset) {
-            let liveOpts = PHLivePhotoRequestOptions()
-            liveOpts.deliveryMode = .opportunistic
-            liveOpts.isNetworkAccessAllowed = false
-            livePhoto = await withCheckedContinuation { cont in
-                var resumed = false
-                PHImageManager.default().requestLivePhoto(
-                    for: asset,
-                    targetSize: CGSize(width: 800, height: 1067),
-                    contentMode: .aspectFill,
-                    options: liveOpts
-                ) { photo, info in
-                    let isDegraded = (info?[PHImageResultIsDegradedKey] as? Bool) ?? false
-                    guard !isDegraded, !resumed else { return }
-                    resumed = true
-                    cont.resume(returning: photo)
-                }
-            }
+            liveMovieURL = await store.pairedMovieURL(for: asset)
         } else {
-            livePhoto = nil
+            liveMovieURL = nil
         }
 
         streak = store.currentStreak(context: context)
@@ -185,36 +171,5 @@ struct TodayView: View {
         f.locale = Locale(identifier: "zh_CN")
         f.dateFormat = "M月d日 EEEE"
         return f.string(from: Date())
-    }
-}
-
-struct LivePhotoCardView: UIViewRepresentable {
-    let livePhoto: PHLivePhoto
-    @Binding var isPlaying: Bool
-
-    func makeUIView(context: Context) -> PHLivePhotoView {
-        let v = PHLivePhotoView()
-        v.livePhoto = livePhoto
-        v.contentMode = .scaleAspectFill
-        v.clipsToBounds = true
-        v.delegate = context.coordinator
-        return v
-    }
-
-    func updateUIView(_ v: PHLivePhotoView, context: Context) {
-        v.livePhoto = livePhoto
-        if isPlaying { v.startPlayback(with: .full) }
-    }
-
-    func makeCoordinator() -> Coordinator { Coordinator(isPlaying: $isPlaying) }
-
-    class Coordinator: NSObject, PHLivePhotoViewDelegate {
-        @Binding var isPlaying: Bool
-        init(isPlaying: Binding<Bool>) { _isPlaying = isPlaying }
-
-        func livePhotoView(_ livePhotoView: PHLivePhotoView,
-                           didEndPlaybackWith playbackStyle: PHLivePhotoViewPlaybackStyle) {
-            isPlaying = false
-        }
     }
 }
