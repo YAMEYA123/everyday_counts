@@ -9,34 +9,46 @@ import WidgetKit
 class EntryStore: ObservableObject {
     static let albumName = "Everyday Counts"
 
+    private enum EntryStoreError: Error {
+        case notEditable
+        case writeFailure
+    }
+
     // MARK: - Widget shared data
 
     private static let appGroupID = "group.com.yameya.everyday-counts"
     private static let thumbFilename = "widget_thumb.jpg"
+    private static let checkedDateKey = "widget_checked_date"
 
-    private static func writeWidgetData(imageData: Data, date: String) {
+    private static func writeWidgetData(date: String, imageData: Data?) {
         let defaults = UserDefaults(suiteName: appGroupID)
-        defaults?.set(date, forKey: "widget_checked_date")
+        defaults?.set(date, forKey: checkedDateKey)
+
         if let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) {
             let url = container.appendingPathComponent(thumbFilename)
-            if let img = UIImage(data: imageData),
+            if let imageData,
+               let img = UIImage(data: imageData),
                let resized = resizeImage(img, maxSide: 300),
                let jpeg = resized.jpegData(compressionQuality: 0.7) {
                 try? jpeg.write(to: url, options: .atomic)
+            } else {
+                try? FileManager.default.removeItem(at: url)
             }
         }
+
         WidgetCenter.shared.reloadAllTimelines()
     }
 
     private static func resizeImage(_ image: UIImage, maxSide: CGFloat) -> UIImage? {
         let size = image.size
+        guard size.width > 0 && size.height > 0 else { return nil }
         let scale = min(maxSide / size.width, maxSide / size.height)
         let newSize = CGSize(width: size.width * scale, height: size.height * scale)
         let renderer = UIGraphicsImageRenderer(size: newSize)
         return renderer.image { _ in image.draw(in: CGRect(origin: .zero, size: newSize)) }
     }
 
-    // MARK: - Local backup directory
+    // MARK: - Local media storage
 
     private static var backupDir: URL {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -49,8 +61,15 @@ class EntryStore: ObservableObject {
         backupDir.appendingPathComponent("\(date).jpg")
     }
 
+    private static func sketchURL(for date: String) -> URL {
+        backupDir.appendingPathComponent("\(date).sketch.png")
+    }
+
+    private static func sketchURL(from path: String) -> URL {
+        backupDir.appendingPathComponent(path)
+    }
+
     private static func saveBackup(imageData: Data, date: String) {
-        // Compress to ~1500px JPEG (~300 KB) instead of storing full-res HEIC (~3-5 MB)
         let data: Data
         if let img = UIImage(data: imageData),
            let resized = resizeImage(img, maxSide: 1500),
@@ -63,8 +82,10 @@ class EntryStore: ObservableObject {
     }
 
     private static func loadBackup(for date: String) -> Data? {
-        // Try new .jpg path first, fall back to legacy .heic
-        if let data = try? Data(contentsOf: backupURL(for: date)) { return data }
+        if let data = try? Data(contentsOf: backupURL(for: date)) {
+            return data
+        }
+
         let legacyURL = backupDir.appendingPathComponent("\(date).heic")
         return try? Data(contentsOf: legacyURL)
     }
@@ -84,17 +105,56 @@ class EntryStore: ObservableObject {
         liveVideoCacheDir.appendingPathComponent("\(safeAssetId(assetIdentifier)).mov")
     }
 
-    // MARK: - SwiftData helpers
+    // MARK: - Date helpers
 
-    func save(date: String, assetIdentifier: String, context: ModelContext) {
-        let descriptor = FetchDescriptor<DailyEntry>(predicate: #Predicate { $0.date == date })
-        if let existing = try? context.fetch(descriptor) {
-            existing.forEach { context.delete($0) }
-        }
-        let entry = DailyEntry(date: date, assetIdentifier: assetIdentifier)
-        context.insert(entry)
-        try? context.save()
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar.current
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = .autoupdatingCurrent
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+
+    static func dateKey(_ date: Date) -> String {
+        dateFormatter.string(from: date)
     }
+
+    static func dateFromKey(_ date: String) -> Date? {
+        dateFormatter.date(from: date)
+    }
+
+    static func dayEnd(_ date: Date) -> Date {
+        let cal = Calendar.current
+        return cal.date(bySettingHour: 23, minute: 59, second: 59, of: date) ?? date
+    }
+
+    /// 默认编辑窗口到本地时区当天 23:59:59。
+    static func isEditable(date: String, now: Date = Date()) -> Bool {
+        guard let targetDate = dateFromKey(date) else { return false }
+        let cal = Calendar.current
+        guard cal.isDate(targetDate, inSameDayAs: now) else { return false }
+        return now <= dayEnd(targetDate)
+    }
+
+    /// 过去日期可用于“补记”，但仅当该天尚未记录任何内容。
+    static func isMissedFillAllowed(date: String, now: Date = Date()) -> Bool {
+        guard let targetDate = dateFromKey(date) else { return false }
+        let cal = Calendar.current
+        guard !isEditable(date: date, now: now) else { return false }
+        return targetDate < cal.startOfDay(for: now)
+    }
+
+    func canEdit(date: String, now: Date = Date()) -> Bool {
+        Self.isEditable(date: date, now: now)
+    }
+
+    func canFillMissed(for date: String, now: Date = Date(), context: ModelContext) -> Bool {
+        guard Self.isMissedFillAllowed(date: date, now: now) else { return false }
+        return entry(for: date, context: context) == nil
+    }
+
+    // MARK: - SwiftData helpers
 
     func entry(for date: String, context: ModelContext) -> DailyEntry? {
         let descriptor = FetchDescriptor<DailyEntry>(predicate: #Predicate { $0.date == date })
@@ -110,13 +170,67 @@ class EntryStore: ObservableObject {
         return (try? context.fetch(descriptor)) ?? []
     }
 
+    func currentStreak(context: ModelContext) -> Int {
+        let cal = Calendar.current
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+        var streak = 0
+        var checkDate = Date()
+
+        let todayKey = f.string(from: checkDate)
+        if entry(for: todayKey, context: context) == nil {
+            guard let yesterday = cal.date(byAdding: .day, value: -1, to: checkDate) else { return 0 }
+            checkDate = yesterday
+        }
+
+        while true {
+            let key = f.string(from: checkDate)
+            if entry(for: key, context: context) != nil {
+                streak += 1
+                guard let prev = cal.date(byAdding: .day, value: -1, to: checkDate) else { break }
+                checkDate = prev
+            } else {
+                break
+            }
+        }
+        return streak
+    }
+
+    private func removeExistingIfAny(date: String, context: ModelContext) {
+        let descriptor = FetchDescriptor<DailyEntry>(predicate: #Predicate { $0.date == date })
+        if let existing = try? context.fetch(descriptor) {
+            existing.forEach { old in
+                if old.kind == .photo,
+                   let oldAsset = resolveAsset(identifier: old.assetIdentifier) {
+                    Task { await self.removeFromAlbum(asset: oldAsset) }
+                }
+                if old.kind == .sketch {
+                    removeLocalSketchFile(old.sketchPath)
+                }
+                context.delete(old)
+            }
+        }
+    }
+
+    private func removeLocalSketchFile(_ path: String?) {
+        guard let path else { return }
+        let url = Self.sketchURL(from: path)
+        try? FileManager.default.removeItem(at: url)
+    }
+
+    private func removeWidgetThumbIfNeeded() {
+        if let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: Self.appGroupID) {
+            let url = container.appendingPathComponent(Self.thumbFilename)
+            try? FileManager.default.removeItem(at: url)
+        }
+    }
+
     func resolveAsset(identifier: String) -> PHAsset? {
-        PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil).firstObject
+        guard !identifier.isEmpty else { return nil }
+        return PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil).firstObject
     }
 
     func isLivePhoto(asset: PHAsset) -> Bool {
-        PHAssetResource.assetResources(for: asset)
-            .contains { $0.type == .pairedVideo }
+        PHAssetResource.assetResources(for: asset).contains { $0.type == .pairedVideo }
     }
 
     func pairedMovieURL(for asset: PHAsset) async -> URL? {
@@ -155,28 +269,81 @@ class EntryStore: ObservableObject {
         }
     }
 
-    func currentStreak(context: ModelContext) -> Int {
-        let cal = Calendar.current
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
-        var streak = 0
-        var checkDate = Date()
-        let todayKey = f.string(from: checkDate)
-        let todayEntry = entry(for: todayKey, context: context)
-        if todayEntry == nil {
-            guard let yesterday = cal.date(byAdding: .day, value: -1, to: checkDate) else { return 0 }
-            checkDate = yesterday
+    // MARK: - Save
+
+    func saveLivePhoto(imageData: Data, videoURL: URL?, date: String, context: ModelContext) async throws -> String {
+        guard canEdit(date: date) || canFillMissed(for: date, context: context) else {
+            throw EntryStoreError.notEditable
         }
-        while true {
-            let key = f.string(from: checkDate)
-            if entry(for: key, context: context) != nil {
-                streak += 1
-                guard let prev = cal.date(byAdding: .day, value: -1, to: checkDate) else { break }
-                checkDate = prev
-            } else {
-                break
+
+        if let existing = entry(for: date, context: context), canEdit(date: date) {
+            removeExistingIfAny(date: date, context: context)
+            removeLocalSketchFile(existing.sketchPath)
+        }
+
+        if !canEdit(date: date) && !canFillMissed(for: date, context: context) {
+            throw EntryStoreError.notEditable
+        }
+
+        saveBackup(imageData: imageData, date: date)
+        Self.writeWidgetData(date: date, imageData: imageData)
+
+        guard let album = await ensureAlbumExists() else {
+            throw EntryStoreError.writeFailure
+        }
+        let assetID = try await writeToPhotoLibrary(imageData: imageData, videoURL: videoURL, album: album)
+        let entry = DailyEntry(date: date, assetIdentifier: assetID, kind: .photo)
+        context.insert(entry)
+        try? context.save()
+        return assetID
+    }
+
+    func saveText(_ text: String, date: String, context: ModelContext) {
+        let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty else { return }
+        guard canEdit(date: date) || canFillMissed(for: date, context: context) else { return }
+
+        if let existing = entry(for: date, context: context), canEdit(date: date) {
+            removeExistingIfAny(date: date, context: context)
+            removeLocalSketchFile(existing.sketchPath)
+        }
+
+        Self.writeWidgetData(date: date, imageData: nil)
+        removeWidgetThumbIfNeeded()
+        let entry = DailyEntry(date: date, assetIdentifier: "", kind: .text, noteText: normalized)
+        context.insert(entry)
+        try? context.save()
+    }
+
+    func saveSketch(_ imageData: Data, date: String, context: ModelContext) throws {
+        guard canEdit(date: date) || canFillMissed(for: date, context: context) else {
+            throw EntryStoreError.notEditable
+        }
+
+        if let existing = entry(for: date, context: context), canEdit(date: date) {
+            removeExistingIfAny(date: date, context: context)
+            removeLocalSketchFile(existing.sketchPath)
+        }
+
+        let url = Self.sketchURL(for: date)
+        try imageData.write(to: url, options: .atomic)
+        Self.writeWidgetData(date: date, imageData: nil)
+        removeWidgetThumbIfNeeded()
+
+        let entry = DailyEntry(date: date, assetIdentifier: "", kind: .sketch, sketchPath: url.lastPathComponent)
+        context.insert(entry)
+        try? context.save()
+    }
+
+    func loadSketchImage(for entry: DailyEntry) -> UIImage? {
+        guard entry.kind == .sketch else { return nil }
+        if let path = entry.sketchPath {
+            let url = Self.sketchURL(from: path)
+            if let data = try? Data(contentsOf: url) {
+                return UIImage(data: data)
             }
         }
-        return streak
+        return nil
     }
 
     // MARK: - Album
@@ -191,51 +358,18 @@ class EntryStore: ObservableObject {
         let albums = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil)
         var found: PHAssetCollection?
         albums.enumerateObjects { col, _, stop in
-            if col.localizedTitle == EntryStore.albumName { found = col; stop.pointee = true }
+            if col.localizedTitle == Self.albumName { found = col; stop.pointee = true }
         }
         if let found { return found }
 
         var placeholder: PHObjectPlaceholder?
         try? await PHPhotoLibrary.shared().performChanges {
             placeholder = PHAssetCollectionChangeRequest
-                .creationRequestForAssetCollection(withTitle: EntryStore.albumName)
+                .creationRequestForAssetCollection(withTitle: Self.albumName)
                 .placeholderForCreatedAssetCollection
         }
         guard let id = placeholder?.localIdentifier else { return nil }
         return PHAssetCollection.fetchAssetCollections(withLocalIdentifiers: [id], options: nil).firstObject
-    }
-
-    // MARK: - Save (with local backup)
-
-    func saveLivePhoto(imageData: Data, videoURL: URL?, date: String, context: ModelContext) async throws -> String {
-        // If retaking today, remove old photo from the album (keep it in user's main library)
-        if let existing = entry(for: date, context: context),
-           let oldAsset = resolveAsset(identifier: existing.assetIdentifier) {
-            await removeFromAlbum(asset: oldAsset)
-        }
-
-        EntryStore.saveBackup(imageData: imageData, date: date)
-        EntryStore.writeWidgetData(imageData: imageData, date: date)
-
-        guard let album = await ensureAlbumExists() else {
-            throw NSError(domain: "EntryStore", code: 1)
-        }
-        let assetID = try await writeToPhotoLibrary(imageData: imageData, videoURL: videoURL, album: album)
-        save(date: date, assetIdentifier: assetID, context: context)
-        return assetID
-    }
-
-    /// Remove an asset from the "Everyday Counts" album without deleting it from the library.
-    private func removeFromAlbum(asset: PHAsset) async {
-        let albums = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil)
-        var target: PHAssetCollection?
-        albums.enumerateObjects { col, _, stop in
-            if col.localizedTitle == EntryStore.albumName { target = col; stop.pointee = true }
-        }
-        guard let album = target else { return }
-        try? await PHPhotoLibrary.shared().performChanges {
-            PHAssetCollectionChangeRequest(for: album)?.removeAssets([asset] as NSArray)
-        }
     }
 
     private func writeToPhotoLibrary(imageData: Data, videoURL: URL?, album: PHAssetCollection) async throws -> String {
@@ -253,22 +387,37 @@ class EntryStore: ObservableObject {
                 PHAssetCollectionChangeRequest(for: album)?.addAssets([ph] as NSArray)
             }
         }
-        guard let id = assetID else { throw NSError(domain: "EntryStore", code: 2) }
+        guard let id = assetID else { throw EntryStoreError.writeFailure }
         return id
+    }
+
+    /// Remove an asset from the "Everyday Counts" album without deleting it from the library.
+    private func removeFromAlbum(asset: PHAsset) async {
+        let albums = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil)
+        var target: PHAssetCollection?
+        albums.enumerateObjects { col, _, stop in
+            if col.localizedTitle == Self.albumName { target = col; stop.pointee = true }
+        }
+        guard let album = target else { return }
+        try? await PHPhotoLibrary.shared().performChanges {
+            PHAssetCollectionChangeRequest(for: album)?.removeAssets([asset] as NSArray)
+        }
     }
 
     // MARK: - Restore if deleted
 
     func restoreIfNeeded(entry: DailyEntry, context: ModelContext) async -> PHAsset? {
+        guard entry.kind == .photo else { return nil }
         if let asset = resolveAsset(identifier: entry.assetIdentifier) { return asset }
 
-        guard let backupData = EntryStore.loadBackup(for: entry.date),
+        guard let backupData = Self.loadBackup(for: entry.date),
               let album = await ensureAlbumExists() else { return nil }
 
         guard let newID = try? await writeToPhotoLibrary(imageData: backupData, videoURL: nil, album: album)
         else { return nil }
 
-        save(date: entry.date, assetIdentifier: newID, context: context)
+        entry.assetIdentifier = newID
+        try? context.save()
         return resolveAsset(identifier: newID)
     }
 }

@@ -88,9 +88,10 @@ struct ReviewView: View {
     }
 
     private func load() {
-        entries = isMonthRange
+        let list = isMonthRange
             ? store.entries(year: year, month: month, context: context)
             : store.entries(year: year, month: nil, context: context)
+        entries = list.filter { $0.kind == .photo }
     }
 
     private func generate() async {
