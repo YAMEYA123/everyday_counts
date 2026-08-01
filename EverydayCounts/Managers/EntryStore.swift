@@ -5,6 +5,10 @@ import UIKit
 import AVFoundation
 import WidgetKit
 
+extension Notification.Name {
+    static let everydayCountsTimelineNeedsRefresh = Notification.Name("everydayCountsTimelineNeedsRefresh")
+}
+
 @MainActor
 class EntryStore: ObservableObject {
     static let albumName = "Everyday Counts"
@@ -364,6 +368,7 @@ class EntryStore: ObservableObject {
         let entry = DailyEntry(date: date, assetIdentifier: assetID, kind: .photo)
         context.insert(entry)
         try context.save()
+        NotificationCenter.default.post(name: .everydayCountsTimelineNeedsRefresh, object: nil)
         return assetID
     }
 
@@ -382,6 +387,7 @@ class EntryStore: ObservableObject {
         let entry = DailyEntry(date: date, assetIdentifier: "", kind: .text, noteText: normalized)
         context.insert(entry)
         try? context.save()
+        NotificationCenter.default.post(name: .everydayCountsTimelineNeedsRefresh, object: nil)
     }
 
     func saveSketch(_ imageData: Data, date: String, context: ModelContext) throws {
@@ -402,6 +408,7 @@ class EntryStore: ObservableObject {
         let entry = DailyEntry(date: date, assetIdentifier: "", kind: .sketch, sketchPath: url.lastPathComponent)
         context.insert(entry)
         try? context.save()
+        NotificationCenter.default.post(name: .everydayCountsTimelineNeedsRefresh, object: nil)
     }
 
     func loadSketchImage(for entry: DailyEntry) -> UIImage? {

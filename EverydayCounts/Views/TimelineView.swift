@@ -168,6 +168,9 @@ struct TimelineView: View {
         }
         .task { await load() }
         .onAppear { Task { await load() } }
+        .onReceive(NotificationCenter.default.publisher(for: .everydayCountsTimelineNeedsRefresh)) { _ in
+            Task { await load() }
+        }
         .onChange(of: year) { _, _ in Task { await load() } }
         .onChange(of: month) { _, _ in Task { await load() } }
     }

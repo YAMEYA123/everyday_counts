@@ -54,6 +54,7 @@ struct SettingsView: View {
                         } else {
                             recoveryMessage = "扫描到 \(result.scanned) 张照片，恢复了 0 条新记录。"
                         }
+                        NotificationCenter.default.post(name: .everydayCountsTimelineNeedsRefresh, object: nil)
                         showRecoveryAlert = true
                     } label: {
                         Label("从系统相册恢复时间线", systemImage: "arrow.clockwise")
