@@ -372,6 +372,34 @@ class EntryStore: ObservableObject {
         return assetID
     }
 
+    func saveImage(imageData: Data, date: String, context: ModelContext) async throws -> String {
+        guard canEdit(date: date) || canFillMissed(for: date, context: context) else {
+            throw EntryStoreError.notEditable
+        }
+
+        if let existing = entry(for: date, context: context), canEdit(date: date) {
+            removeExistingIfAny(date: date, context: context)
+            removeLocalSketchFile(existing.sketchPath)
+        }
+
+        guard canEdit(date: date) || canFillMissed(for: date, context: context) else {
+            throw EntryStoreError.notEditable
+        }
+
+        Self.saveBackup(imageData: imageData, date: date)
+        Self.writeWidgetData(date: date, imageData: imageData)
+
+        guard let album = await ensureAlbumExists() else {
+            throw EntryStoreError.writeFailure
+        }
+        let assetID = try await writeToPhotoLibrary(imageData: imageData, videoURL: nil, album: album)
+        let entry = DailyEntry(date: date, assetIdentifier: assetID, kind: .photo)
+        context.insert(entry)
+        try context.save()
+        NotificationCenter.default.post(name: .everydayCountsTimelineNeedsRefresh, object: nil)
+        return assetID
+    }
+
     func saveText(_ text: String, date: String, context: ModelContext) {
         let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalized.isEmpty else { return }

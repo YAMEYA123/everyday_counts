@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import Photos
+import PhotosUI
 import AVFoundation
 import PencilKit
 
@@ -20,6 +21,8 @@ struct TodayView: View {
     @State private var sketchDrawing = PKDrawing()
     @State private var showSaveError = false
     @State private var saveErrorMessage = ""
+    @State private var selectedPhoto: PhotosPickerItem?
+    @State private var showPhotoPicker = false
     @AppStorage("hasShownLiveHint") private var hasShownLiveHint = false
 
     private var todayKey: String {
@@ -116,8 +119,14 @@ struct TodayView: View {
                             }
                         }
                         .padding(.horizontal)
-                        if entry.kind == .photo {
-                            Button("重新拍摄") { showRetakeConfirm = true }
+                        if canEditToday {
+                            if entry.kind == .photo {
+                                HStack(spacing: 18) {
+                                    Button("重新拍摄") { showRetakeConfirm = true }
+                                    PhotosPicker(selection: $selectedPhoto, matching: .images, photoLibrary: .shared()) {
+                                        Text("从相册替换")
+                                    }
+                                }
                                 .font(.subheadline).foregroundStyle(.white.opacity(0.4))
                                 .confirmationDialog("今天的照片将被替换", isPresented: $showRetakeConfirm, titleVisibility: .visible) {
                                     Button("确定重拍", role: .destructive) { showCamera = true }
@@ -125,17 +134,19 @@ struct TodayView: View {
                                 } message: {
                                     Text("每天只有一次机会，确定要重拍吗？")
                                 }
-                        } else {
-                            Button("重写内容") { showRetakeConfirm = true }
-                                .font(.subheadline).foregroundStyle(.white.opacity(0.4))
-                                .confirmationDialog("今天的记录将被替换", isPresented: $showRetakeConfirm, titleVisibility: .visible) {
-                                    Button("重拍照片", role: .destructive) { showCamera = true }
-                                    Button("改为文字") { showTextSheet = true }
-                                    Button("改为白板") { showSketchSheet = true; sketchDrawing = PKDrawing() }
-                                    Button("取消", role: .cancel) {}
-                                } message: {
-                                    Text("每天只能保留一个内容，确定要替换吗？")
-                                }
+                            } else {
+                                Button("重写内容") { showRetakeConfirm = true }
+                                    .font(.subheadline).foregroundStyle(.white.opacity(0.4))
+                                    .confirmationDialog("今天的记录将被替换", isPresented: $showRetakeConfirm, titleVisibility: .visible) {
+                                        Button("重拍照片", role: .destructive) { showCamera = true }
+                                        Button("从相册选择") { selectedPhoto = nil; showPhotoPicker = true }
+                                        Button("改为文字") { showTextSheet = true }
+                                        Button("改为白板") { showSketchSheet = true; sketchDrawing = PKDrawing() }
+                                        Button("取消", role: .cancel) {}
+                                    } message: {
+                                        Text("每天只能保留一个内容，确定要替换吗？")
+                                    }
+                            }
                         }
                     } else if canEditToday {
                         VStack(spacing: 12) {
@@ -150,6 +161,14 @@ struct TodayView: View {
                                 .background(Color.white.opacity(0.06))
                                 .clipShape(RoundedRectangle(cornerRadius: 16))
                                 .padding(.horizontal)
+                            }
+
+                            PhotosPicker(selection: $selectedPhoto, matching: .images, photoLibrary: .shared()) {
+                                HStack { Image(systemName: "photo.on.rectangle"); Text("从相册选择图片") }
+                                    .frame(maxWidth: .infinity).padding(.vertical, 12)
+                                    .background(Color.white.opacity(0.08))
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .padding(.horizontal)
                             }
 
                             Button { showTextSheet = true } label: {
@@ -185,6 +204,14 @@ struct TodayView: View {
                 Task { await savePhoto(imageData: imageData, movieURL: movieURL, targetDate: todayKey) }
             }
         }
+        .onChange(of: selectedPhoto) { _, item in
+            guard let item else { return }
+            Task {
+                await saveSelectedPhoto(item, targetDate: todayKey)
+                selectedPhoto = nil
+            }
+        }
+        .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhoto, matching: .images)
         .sheet(isPresented: $showTextSheet) {
             TextNoteSheet(isPresented: $showTextSheet, text: $noteDraft) { text in
                 noteDraft = text
@@ -270,6 +297,20 @@ struct TodayView: View {
             saveErrorMessage = error.localizedDescription
             showSaveError = true
             print("Save error:", error)
+        }
+    }
+
+    private func saveSelectedPhoto(_ item: PhotosPickerItem, targetDate: String) async {
+        do {
+            guard let imageData = try await item.loadTransferable(type: Data.self) else {
+                throw NSError(domain: "EverydayCounts", code: 1, userInfo: [NSLocalizedDescriptionKey: "无法读取所选图片"])
+            }
+            _ = try await store.saveImage(imageData: imageData, date: targetDate, context: context)
+            await load()
+        } catch {
+            saveErrorMessage = error.localizedDescription
+            showSaveError = true
+            print("Image upload error:", error)
         }
     }
 
