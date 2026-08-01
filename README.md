@@ -43,8 +43,8 @@ A minimalist daily photo diary for iOS. One photo per day — one moment, one me
 
 - 应用图标：黑色主色调，浮动日历格样式（白色细线圆角方格 + 顶部标题栏 + 装订孔 + 中心圆点），与应用整体暗黑极简风格一致
 - App icon: black-primary, floating calendar tile (white-outlined rounded rect, header strip, binding rings, center dot), consistent with the dark minimalist in-app aesthetic
-- 画面规格：日历缩略图使用 1:1；今天页、详情页和回顾视频统一使用 9:16；原始照片和 Live Photo 保留原始比例
-- Framing: calendar thumbnails use 1:1; Today, detail previews, and recap videos share a 9:16 frame; original photos and Live Photos keep their native aspect ratio
+- 画面规格：日历缩略图和今天页主卡片使用 1:1 / 3:4 的易读展示比例；详情页和回顾视频使用 9:16；原始照片和 Live Photo 保留原始比例
+- Framing: calendar thumbnails and the Today card use compact 1:1 / 3:4 presentation frames; detail previews and recap videos use 9:16; original photos and Live Photos keep their native aspect ratio
 
 ## 环境要求 Requirements
 

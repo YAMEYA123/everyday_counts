@@ -26,7 +26,9 @@ struct LivePhotoFullscreen: View {
                     image: thumbnail,
                     movieURL: liveMovieURL,
                     autoplay: true,
-                    cornerRadius: 0
+                    cornerRadius: 0,
+                    aspectRatio: MediaPresentation.vlogAspectRatio,
+                    maxHeight: 600
                 )
                 .padding(.horizontal, 16)
             } else if entry.kind == .text {
@@ -43,7 +45,12 @@ struct LivePhotoFullscreen: View {
                 .padding(.horizontal, 16)
             } else if entry.kind == .sketch {
                 if let image = sketchImage {
-                    VlogFrameView(image: image, cornerRadius: 0)
+                    VlogFrameView(
+                        image: image,
+                        cornerRadius: 0,
+                        aspectRatio: MediaPresentation.vlogAspectRatio,
+                        maxHeight: 600
+                    )
                         .padding(.horizontal, 16)
                 } else {
                     ProgressView().tint(.white)

@@ -81,7 +81,7 @@ struct TodayView: View {
                                 }
                                 .padding()
                                 .frame(maxWidth: .infinity)
-                                .aspectRatio(MediaPresentation.vlogAspectRatio, contentMode: .fit)
+                                .aspectRatio(MediaPresentation.todayAspectRatio, contentMode: .fit)
                                 .background(Color.white.opacity(0.06))
                                 .clipShape(RoundedRectangle(cornerRadius: 16))
                             } else if entry.kind == .sketch, let img = thumbnail {
@@ -412,6 +412,7 @@ struct TodayView: View {
 }
 
 enum MediaPresentation {
+    static let todayAspectRatio: CGFloat = 3.0 / 4.0
     static let vlogAspectRatio: CGFloat = 9.0 / 16.0
     static let vlogSize = CGSize(width: 1080, height: 1920)
 }
@@ -422,6 +423,7 @@ struct VlogFrameView: View {
     var playTrigger = 0
     var autoplay = false
     var cornerRadius: CGFloat = 20
+    var aspectRatio: CGFloat = MediaPresentation.todayAspectRatio
     var maxHeight: CGFloat = 460
 
     var body: some View {
@@ -442,7 +444,7 @@ struct VlogFrameView: View {
                 ProgressView().tint(.white)
             }
         }
-        .frame(width: maxHeight * MediaPresentation.vlogAspectRatio, height: maxHeight)
+        .frame(width: maxHeight * aspectRatio, height: maxHeight)
         .frame(maxWidth: .infinity)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
     }
