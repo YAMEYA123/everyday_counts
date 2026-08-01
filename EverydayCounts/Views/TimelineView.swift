@@ -58,7 +58,9 @@ struct TimelineView: View {
                 Image(systemName: "chevron.left").foregroundStyle(.white.opacity(0.6))
             }
             Spacer()
-            Text("\(year)年\(month)月").font(.headline).foregroundStyle(.white)
+            Text(verbatim: "\(year)年\(month)月")
+                .font(.headline)
+                .foregroundStyle(.white)
             Spacer()
             Button { nextMonth() } label: {
                 Image(systemName: "chevron.right").foregroundStyle(.white.opacity(0.6))
@@ -151,6 +153,7 @@ struct TimelineView: View {
             }
         }
         .task { await load() }
+        .onAppear { Task { await load() } }
         .onChange(of: year) { _, _ in Task { await load() } }
         .onChange(of: month) { _, _ in Task { await load() } }
     }

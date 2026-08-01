@@ -194,8 +194,8 @@ class EntryStore: ObservableObject {
         var recovered = 0
 
         assets.enumerateObjects { asset, _, _ in
-            guard let creationDate = asset.creationDate else { return }
-            let date = Self.dateKey(creationDate)
+            guard let assetDate = asset.creationDate ?? asset.modificationDate else { return }
+            let date = Self.dateKey(assetDate)
             guard self.entry(for: date, context: context) == nil else { return }
 
             context.insert(DailyEntry(
