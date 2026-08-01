@@ -242,6 +242,7 @@ struct TodayView: View {
                     }
                 }
                 .padding(.top, 4)
+                .padding(.bottom, 24)
             }
             .background(Color.black)
             .scrollIndicators(.hidden)
@@ -421,6 +422,7 @@ struct VlogFrameView: View {
     var playTrigger = 0
     var autoplay = false
     var cornerRadius: CGFloat = 16
+    var maxHeight: CGFloat = 410
 
     var body: some View {
         ZStack {
@@ -440,8 +442,8 @@ struct VlogFrameView: View {
                 ProgressView().tint(.white)
             }
         }
+        .frame(width: maxHeight * MediaPresentation.vlogAspectRatio, height: maxHeight)
         .frame(maxWidth: .infinity)
-        .aspectRatio(MediaPresentation.vlogAspectRatio, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
     }
 }
