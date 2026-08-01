@@ -170,6 +170,48 @@ class EntryStore: ObservableObject {
         return (try? context.fetch(descriptor)) ?? []
     }
 
+    /// Rebuild missing photo indexes from the app's system album.
+    /// This recovers records after a reinstall or Bundle ID change without
+    /// deleting or replacing anything in Photos.
+    @discardableResult
+    func rebuildEntriesFromAlbum(context: ModelContext) -> Int {
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        guard status == .authorized || status == .limited else { return 0 }
+
+        let albums = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil)
+        var album: PHAssetCollection?
+        albums.enumerateObjects { collection, _, stop in
+            if collection.localizedTitle == Self.albumName {
+                album = collection
+                stop.pointee = true
+            }
+        }
+        guard let album else { return 0 }
+
+        let options = PHFetchOptions()
+        options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: true)]
+        let assets = PHAsset.fetchAssets(in: album, options: options)
+        var recovered = 0
+
+        assets.enumerateObjects { asset, _, _ in
+            guard let creationDate = asset.creationDate else { return }
+            let date = Self.dateKey(creationDate)
+            guard self.entry(for: date, context: context) == nil else { return }
+
+            context.insert(DailyEntry(
+                date: date,
+                assetIdentifier: asset.localIdentifier,
+                kind: .photo
+            ))
+            recovered += 1
+        }
+
+        if recovered > 0 {
+            try? context.save()
+        }
+        return recovered
+    }
+
     func currentStreak(context: ModelContext) -> Int {
         let cal = Calendar.current
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"

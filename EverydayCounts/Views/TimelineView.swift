@@ -125,6 +125,7 @@ struct TimelineView: View {
     }
 
     private func load() async {
+        store.rebuildEntriesFromAlbum(context: context)
         let entries = store.entries(year: year, month: month, context: context)
         entryMap = Dictionary(entries.map { ($0.date, $0) }, uniquingKeysWith: { _, last in last })
     }

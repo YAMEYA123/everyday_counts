@@ -202,6 +202,7 @@ struct TodayView: View {
     }
 
     private func load() async {
+        store.rebuildEntriesFromAlbum(context: context)
         todayEntry = store.entry(for: todayKey, context: context)
         guard let entry = todayEntry else {
             thumbnail = nil; liveMovieURL = nil
