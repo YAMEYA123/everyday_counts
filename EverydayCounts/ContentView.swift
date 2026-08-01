@@ -14,5 +14,8 @@ struct ContentView: View {
         }
         .tint(.white)
         .preferredColorScheme(.dark)
+        .toolbarBackground(Color.black, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
+        .toolbarColorScheme(.dark, for: .tabBar)
     }
 }
