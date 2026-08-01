@@ -22,23 +22,11 @@ struct LivePhotoFullscreen: View {
             Color.black.ignoresSafeArea()
 
             if entry.kind == .photo {
-                if let movieURL = liveMovieURL {
-                    LivePhotoMovieView(
-                        url: movieURL,
-                        videoGravity: .resizeAspect,
-                        autoplay: true
-                    )
-                    .ignoresSafeArea()
-                    .offset(y: -32)
-                } else if let image = thumbnail {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
-                        .ignoresSafeArea()
-                        .offset(y: -32)
-                } else {
-                    ProgressView().tint(.white)
-                }
+                VlogFrameView(
+                    image: thumbnail,
+                    movieURL: liveMovieURL,
+                    autoplay: true
+                )
             } else if entry.kind == .text {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("文字记录")
@@ -51,11 +39,7 @@ struct LivePhotoFullscreen: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if entry.kind == .sketch {
                 if let image = sketchImage {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
-                        .ignoresSafeArea()
-                        .offset(y: -32)
+                    VlogFrameView(image: image)
                 } else {
                     ProgressView().tint(.white)
                 }
