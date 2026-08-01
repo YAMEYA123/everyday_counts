@@ -52,50 +52,64 @@ struct TimelineView: View {
         Array(repeating: GridItem(.flexible(), spacing: 2), count: 7)
     }
 
+    private var calendarHeader: some View {
+        HStack {
+            Button { prevMonth() } label: {
+                Image(systemName: "chevron.left").foregroundStyle(.white.opacity(0.6))
+            }
+            Spacer()
+            Text("\(year)年\(month)月").font(.headline).foregroundStyle(.white)
+            Spacer()
+            Button { nextMonth() } label: {
+                Image(systemName: "chevron.right").foregroundStyle(.white.opacity(0.6))
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 12)
+    }
+
+    private var calendarGrid: some View {
+        LazyVGrid(columns: gridColumns, spacing: 2) {
+            ForEach(weekdayLabels, id: \.self) { label in
+                Text(label)
+                    .font(.caption2)
+                    .foregroundStyle(.white.opacity(0.3))
+                    .frame(maxWidth: .infinity)
+            }
+            ForEach(blankIDs, id: \.self) { _ in
+                Color.clear.aspectRatio(1, contentMode: .fit)
+            }
+            ForEach(calendarDays) { item in
+                let key = String(format: "%04d-%02d-%02d", year, month, item.day)
+                DayCellView(
+                    day: item.day,
+                    dateKey: key,
+                    entry: entryMap[key],
+                    isToday: key == todayKey,
+                    store: store,
+                    onTap: handleCellTap
+                )
+            }
+        }
+        .padding(.horizontal)
+    }
+
+    private var timelineContent: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                calendarHeader
+                calendarGrid
+                Text("\(entryMap.count) / \(daysInMonth) 天已记录")
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.3))
+                    .padding(.top, 12)
+            }
+        }
+    }
+
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 0) {
-                    HStack {
-                        Button { prevMonth() } label: {
-                            Image(systemName: "chevron.left").foregroundStyle(.white.opacity(0.6))
-                        }
-                        Spacer()
-                        Text("\(year)年\(month)月").font(.headline).foregroundStyle(.white)
-                        Spacer()
-                        Button { nextMonth() } label: {
-                            Image(systemName: "chevron.right").foregroundStyle(.white.opacity(0.6))
-                        }
-                    }
-                    .padding(.horizontal).padding(.vertical, 12)
-
-                    LazyVGrid(columns: gridColumns, spacing: 2) {
-                        ForEach(weekdayLabels, id: \.self) { label in
-                            Text(label).font(.caption2).foregroundStyle(.white.opacity(0.3))
-                                .frame(maxWidth: .infinity)
-                        }
-                        ForEach(blankIDs, id: \.self) { _ in
-                            Color.clear.aspectRatio(1, contentMode: .fit)
-                        }
-                        ForEach(calendarDays) { item in
-                            let key = String(format: "%04d-%02d-%02d", year, month, item.day)
-                            DayCellView(
-                                day: item.day,
-                                dateKey: key,
-                                entry: entryMap[key],
-                                isToday: key == todayKey,
-                                store: store
-                            ) { date, entry in
-                                handleCellTap(dateKey: date, entry: entry)
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
-
-                    Text("\(entryMap.count) / \(daysInMonth) 天已记录")
-                        .font(.caption).foregroundStyle(.white.opacity(0.3)).padding(.top, 12)
-                }
-            }
+            timelineContent
             .background(Color.black)
             .navigationTitle("时间线")
             .navigationBarTitleDisplayMode(.large)
