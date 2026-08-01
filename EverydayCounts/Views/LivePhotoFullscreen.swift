@@ -10,6 +10,7 @@ struct LivePhotoFullscreen: View {
     @StateObject private var store = EntryStore()
     @State private var liveMovieURL: URL?
     @State private var thumbnail: UIImage?
+    @State private var playTrigger = 0
     @State private var sketchImage: UIImage?
     @State private var showCaptionSheet = false
     @State private var captionDraft = ""
@@ -22,22 +23,29 @@ struct LivePhotoFullscreen: View {
             Color.black.ignoresSafeArea()
 
             if entry.kind == .photo {
-                if let movieURL = liveMovieURL {
-                    LivePhotoMovieView(
-                        url: movieURL,
-                        videoGravity: .resizeAspect,
-                        autoplay: true
-                    )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .ignoresSafeArea()
-                } else if let image = thumbnail {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
+                ZStack {
+                    if let image = thumbnail {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                    if playTrigger > 0, let movieURL = liveMovieURL {
+                        LivePhotoMovieView(
+                            url: movieURL,
+                            videoGravity: .resizeAspect,
+                            playTrigger: playTrigger
+                        )
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .ignoresSafeArea()
-                } else {
-                    ProgressView().tint(.white)
+                    }
+                    if thumbnail == nil {
+                        ProgressView().tint(.white)
+                    }
+                }
+                .contentShape(Rectangle())
+                .onLongPressGesture(minimumDuration: 0.3) {
+                    guard liveMovieURL != nil else { return }
+                    playTrigger += 1
                 }
             } else if entry.kind == .text {
                 VStack(alignment: .leading, spacing: 8) {
@@ -138,11 +146,6 @@ struct LivePhotoFullscreen: View {
             }
             guard let asset else { return }
 
-            if let movieURL = await store.pairedMovieURL(for: asset) {
-                liveMovieURL = movieURL
-                return
-            }
-
             let opts = PHImageRequestOptions()
             opts.deliveryMode = .opportunistic
             opts.isNetworkAccessAllowed = false
@@ -159,6 +162,7 @@ struct LivePhotoFullscreen: View {
                     cont.resume(returning: image)
                 }
             }
+            liveMovieURL = await store.pairedMovieURL(for: asset)
         case .text:
             // 非照片内容直接显示文本即可
             break
