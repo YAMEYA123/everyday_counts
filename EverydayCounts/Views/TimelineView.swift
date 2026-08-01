@@ -57,10 +57,10 @@ struct TimelineView: View {
                             Text($0).font(.caption2).foregroundStyle(.white.opacity(0.3))
                                 .frame(maxWidth: .infinity)
                         }
-                        ForEach(0..<firstWeekday, id: \.self) { _ in
+                        ForEach(0..<firstWeekday, id: { index in "blank-\(index)" }) { _ in
                             Color.clear.aspectRatio(1, contentMode: .fit)
                         }
-                        ForEach(1...daysInMonth, id: \.self) { day in
+                        ForEach(1...daysInMonth, id: { day in "day-\(day)" }) { day in
                             let key = String(format: "%04d-%02d-%02d", year, month, day)
                             DayCellView(
                                 day: day,
