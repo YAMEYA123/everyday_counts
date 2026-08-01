@@ -41,13 +41,12 @@ struct TodayView: View {
                 VStack(spacing: 12) {
                     HStack(alignment: .center) {
                         Text(formattedDate())
-                            .font(.caption.weight(.medium))
-                            .tracking(0.4)
-                            .foregroundStyle(.white.opacity(0.55))
+                            .font(.system(size: 20, weight: .medium, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.88))
                         Spacer()
                         if streak > 0 {
                             Text("✦ 连续 \(streak)")
-                                .font(.caption)
+                                .font(.system(size: 13, weight: .regular, design: .rounded))
                                 .foregroundStyle(.white.opacity(0.42))
                         }
                     }
@@ -123,7 +122,8 @@ struct TodayView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 if let caption = entry.noteText, !caption.isEmpty {
                                     Text(caption)
-                                        .font(.body)
+                                        .font(.system(size: 16, weight: .regular, design: .rounded))
+                                        .lineSpacing(3)
                                         .foregroundStyle(.white.opacity(0.85))
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                 }
@@ -149,7 +149,7 @@ struct TodayView: View {
                                         }
                                     }
                                 }
-                                .font(.subheadline)
+                                .font(.system(size: 14, weight: .medium, design: .rounded))
                                 .foregroundStyle(.white.opacity(0.62))
                             }
                             .padding(.horizontal)
@@ -233,7 +233,7 @@ struct TodayView: View {
             .background(Color.black)
             .scrollIndicators(.hidden)
             .navigationTitle("今天")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
         }
         .fullScreenCover(isPresented: $showCamera) {
             CameraView { imageData, movieURL in
