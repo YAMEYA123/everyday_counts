@@ -9,9 +9,7 @@ struct TimelineView: View {
     @State private var year = Calendar.current.component(.year, from: Date())
     @State private var month = Calendar.current.component(.month, from: Date())
     @Query(sort: [SortDescriptor<DailyEntry>(\.date)]) private var allEntries: [DailyEntry]
-    @State private var previewEntries: [DailyEntry] = []
-    @State private var previewIndex = 0
-    @State private var showDetailPager = false
+    @State private var previewEntry: DailyEntry?
 
     @State private var fillDate: String?
     @State private var showFillAction = false
@@ -148,8 +146,10 @@ struct TimelineView: View {
             .navigationTitle("时间线")
             .navigationBarTitleDisplayMode(.large)
         }
-        .fullScreenCover(isPresented: $showDetailPager) {
-            TimelineDetailPager(entries: previewEntries, initialIndex: previewIndex)
+        .fullScreenCover(item: $previewEntry) { selectedEntry in
+            let entries = recordedEntries
+            let index = entries.firstIndex(where: { $0.date == selectedEntry.date }) ?? 0
+            TimelineDetailPager(entries: entries, initialIndex: index)
         }
         .confirmationDialog("补记这一天", isPresented: $showFillAction, titleVisibility: .visible) {
             Button("写文字") { showFillText = true }
@@ -195,9 +195,7 @@ struct TimelineView: View {
         if let entry {
             let entries = recordedEntries
             guard let index = entries.firstIndex(where: { $0.date == entry.date }) else { return }
-            previewEntries = entries
-            previewIndex = index
-            showDetailPager = true
+            previewEntry = entry
             return
         }
 

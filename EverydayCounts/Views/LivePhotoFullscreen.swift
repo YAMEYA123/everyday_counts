@@ -10,6 +10,7 @@ struct LivePhotoFullscreen: View {
     @StateObject private var store = EntryStore()
     @State private var liveMovieURL: URL?
     @State private var thumbnail: UIImage?
+    @State private var loadMessage: String?
     @State private var playTrigger = 0
     @State private var sketchImage: UIImage?
     @State private var showCaptionSheet = false
@@ -38,7 +39,13 @@ struct LivePhotoFullscreen: View {
                         )
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
-                    if thumbnail == nil {
+                    if let loadMessage, thumbnail == nil {
+                        Text(loadMessage)
+                            .font(.footnote)
+                            .foregroundStyle(.white.opacity(0.65))
+                            .multilineTextAlignment(.center)
+                            .padding(24)
+                    } else if thumbnail == nil {
                         ProgressView().tint(.white)
                     }
                 }
@@ -144,7 +151,10 @@ struct LivePhotoFullscreen: View {
             } else {
                 asset = await store.restoreIfNeeded(entry: entry, context: context)
             }
-            guard let asset else { return }
+            guard let asset else {
+                loadMessage = "无法读取这一天的照片\n请确认应用有照片访问权限"
+                return
+            }
 
             let opts = PHImageRequestOptions()
             opts.deliveryMode = .opportunistic
@@ -161,6 +171,9 @@ struct LivePhotoFullscreen: View {
                     resumed = true
                     cont.resume(returning: image)
                 }
+            }
+            if thumbnail == nil {
+                loadMessage = "照片暂时无法显示\n请稍后重试"
             }
             liveMovieURL = await store.pairedMovieURL(for: asset)
         case .text:
