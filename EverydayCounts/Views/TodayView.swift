@@ -18,6 +18,8 @@ struct TodayView: View {
     @State private var showTextSheet = false
     @State private var showSketchSheet = false
     @State private var sketchDrawing = PKDrawing()
+    @State private var showSaveError = false
+    @State private var saveErrorMessage = ""
     @AppStorage("hasShownLiveHint") private var hasShownLiveHint = false
 
     private var todayKey: String {
@@ -195,6 +197,11 @@ struct TodayView: View {
                 saveSketch(png: png, targetDate: todayKey)
             } onCancel: { sketchDrawing = PKDrawing(); showSketchSheet = false }
         }
+        .alert("保存失败", isPresented: $showSaveError) {
+            Button("好", role: .cancel) {}
+        } message: {
+            Text(saveErrorMessage)
+        }
         .task { await load() }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
             Task { await load() }
@@ -259,7 +266,11 @@ struct TodayView: View {
                 imageData: imageData, videoURL: movieURL, date: targetDate, context: context
             )
             await load()
-        } catch { print("Save error:", error) }
+        } catch {
+            saveErrorMessage = error.localizedDescription
+            showSaveError = true
+            print("Save error:", error)
+        }
     }
 
     private func saveText(targetDate: String) {

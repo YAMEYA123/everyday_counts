@@ -363,7 +363,7 @@ class EntryStore: ObservableObject {
         let assetID = try await writeToPhotoLibrary(imageData: imageData, videoURL: videoURL, album: album)
         let entry = DailyEntry(date: date, assetIdentifier: assetID, kind: .photo)
         context.insert(entry)
-        try? context.save()
+        try context.save()
         return assetID
     }
 
