@@ -34,6 +34,24 @@ struct TimelineView: View {
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f.string(from: Date())
     }
 
+    private var weekdayLabels: [String] {
+        ["一", "二", "三", "四", "五", "六", "日"]
+    }
+
+    private var blankIDs: [String] {
+        (0..<firstWeekday).map { "blank-\($0)" }
+    }
+
+    private var calendarDays: [CalendarDayItem] {
+        (1...daysInMonth).map { day in
+            CalendarDayItem(id: "day-\(day)", day: day)
+        }
+    }
+
+    private var gridColumns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: 2), count: 7)
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -51,13 +69,7 @@ struct TimelineView: View {
                     }
                     .padding(.horizontal).padding(.vertical, 12)
 
-                    let weekdayLabels = ["一", "二", "三", "四", "五", "六", "日"]
-                    let blankIDs = (0..<firstWeekday).map { "blank-\($0)" }
-                    let calendarDays = (1...daysInMonth).map {
-                        CalendarDayItem(id: "day-\($0)", day: $0)
-                    }
-                    let cols = Array(repeating: GridItem(.flexible(), spacing: 2), count: 7)
-                    LazyVGrid(columns: cols, spacing: 2) {
+                    LazyVGrid(columns: gridColumns, spacing: 2) {
                         ForEach(weekdayLabels, id: \.self) { label in
                             Text(label).font(.caption2).foregroundStyle(.white.opacity(0.3))
                                 .frame(maxWidth: .infinity)
