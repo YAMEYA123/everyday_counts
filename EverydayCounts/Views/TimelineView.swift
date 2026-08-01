@@ -52,19 +52,33 @@ struct TimelineView: View {
         Array(repeating: GridItem(.flexible(), spacing: 2), count: 7)
     }
 
+    private var previousMonthButton: some View {
+        Button(action: prevMonth) {
+            Image(systemName: "chevron.left")
+                .foregroundStyle(.white.opacity(0.6))
+        }
+    }
+
+    private var nextMonthButton: some View {
+        Button(action: nextMonth) {
+            Image(systemName: "chevron.right")
+                .foregroundStyle(.white.opacity(0.6))
+        }
+    }
+
+    private var monthTitle: some View {
+        Text(verbatim: "\(year)年\(month)月")
+            .font(.headline)
+            .foregroundStyle(.white)
+    }
+
     private var calendarHeader: some View {
         HStack {
-            Button { prevMonth() } label: {
-                Image(systemName: "chevron.left").foregroundStyle(.white.opacity(0.6))
-            }
+            previousMonthButton
             Spacer()
-            Text(verbatim: "\(year)年\(month)月")
-                .font(.headline)
-                .foregroundStyle(.white)
+            monthTitle
             Spacer()
-            Button { nextMonth() } label: {
-                Image(systemName: "chevron.right").foregroundStyle(.white.opacity(0.6))
-            }
+            nextMonthButton
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
