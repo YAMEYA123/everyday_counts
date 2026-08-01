@@ -111,38 +111,15 @@ struct LivePhotoFullscreen: View {
         }
     }
 
-    @ViewBuilder
     private var captionPanel: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let caption = entry.noteText, !caption.isEmpty {
-                Text(caption)
-                    .font(.body)
-                    .foregroundStyle(.white.opacity(0.9))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            } else {
-                Text("还没有写下今天的心情")
-                    .font(.subheadline)
-                    .foregroundStyle(.white.opacity(0.45))
-            }
-
-            HStack(spacing: 16) {
-                Button(entry.noteText?.isEmpty == false ? "编辑说明" : "写一句今天") {
-                    captionDraft = entry.noteText ?? ""
-                    showCaptionSheet = true
-                }
-                if entry.noteText?.isEmpty == false {
-                    Button("删除", role: .destructive) {
-                        showDeleteCaptionConfirm = true
-                    }
-                }
-            }
-            .font(.subheadline)
-            .foregroundStyle(.white.opacity(0.65))
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        CaptionCardView(
+            caption: entry.noteText,
+            onEdit: {
+                captionDraft = entry.noteText ?? ""
+                showCaptionSheet = true
+            },
+            onDelete: { showDeleteCaptionConfirm = true }
+        )
         .padding(.horizontal, 16)
     }
 

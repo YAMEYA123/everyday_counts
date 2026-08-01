@@ -123,39 +123,14 @@ struct TodayView: View {
                         }
                         .padding(.horizontal)
                         if entry.kind == .photo || entry.kind == .sketch {
-                            VStack(alignment: .leading, spacing: 8) {
-                                if let caption = entry.noteText, !caption.isEmpty {
-                                    Text(caption)
-                                        .font(.system(size: 16, weight: .regular, design: .rounded))
-                                        .lineSpacing(3)
-                                        .foregroundStyle(.white.opacity(0.85))
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                }
-
-                                HStack(spacing: 16) {
-                                    Button(entry.noteText?.isEmpty == false ? "编辑" : "写一句") {
-                                        captionDraft = entry.noteText ?? ""
-                                        showCaptionSheet = true
-                                    }
-                                    if entry.noteText?.isEmpty == false {
-                                        Button("删除", role: .destructive) {
-                                            showDeleteCaptionConfirm = true
-                                        }
-                                    }
-                                    if canEditToday {
-                                        if entry.kind == .photo {
-                                            Button("重拍") { showRetakeConfirm = true }
-                                            PhotosPicker(selection: $selectedPhoto, matching: .images, photoLibrary: .shared()) {
-                                                Text("换一张")
-                                            }
-                                        } else {
-                                            Button("替换") { showRetakeConfirm = true }
-                                        }
-                                    }
-                                }
-                                .font(.system(size: 14, weight: .medium, design: .rounded))
-                                .foregroundStyle(.white.opacity(0.62))
-                            }
+                            CaptionCardView(
+                                caption: entry.noteText,
+                                onEdit: {
+                                    captionDraft = entry.noteText ?? ""
+                                    showCaptionSheet = true
+                                },
+                                onDelete: { showDeleteCaptionConfirm = true }
+                            )
                             .padding(.horizontal)
                             .confirmationDialog(
                                 "删除这句说明？",
@@ -191,6 +166,25 @@ struct TodayView: View {
                                 Button("取消", role: .cancel) {}
                             } message: {
                                 Text("今天的记录将被替换")
+                            }
+                        }
+                        if canEditToday {
+                            if entry.kind == .photo {
+                                HStack(spacing: 0) {
+                                    Button("重拍") { showRetakeConfirm = true }
+                                        .frame(maxWidth: .infinity)
+                                    Divider().frame(height: 16).overlay(Color.white.opacity(0.15))
+                                    PhotosPicker(selection: $selectedPhoto, matching: .images, photoLibrary: .shared()) {
+                                        Text("换一张")
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                }
+                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.62))
+                            } else if entry.kind == .sketch {
+                                Button("替换") { showRetakeConfirm = true }
+                                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    .foregroundStyle(.white.opacity(0.62))
                             }
                         }
                     } else if canEditToday {
@@ -428,6 +422,53 @@ struct TodayView: View {
         f.locale = Locale(identifier: "zh_CN")
         f.dateFormat = "M月d日 EEEE"
         return f.string(from: Date())
+    }
+}
+
+struct CaptionCardView: View {
+    let caption: String?
+    let onEdit: () -> Void
+    let onDelete: () -> Void
+
+    private var hasCaption: Bool {
+        guard let caption else { return false }
+        return !caption.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            if hasCaption, let caption {
+                Text("“\(caption)”")
+                    .font(.system(size: 17, weight: .regular, design: .rounded))
+                    .lineSpacing(4)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.white.opacity(0.92))
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 28)
+                    .padding(.vertical, 24)
+                    .contentShape(Rectangle())
+                    .onTapGesture(count: 2, perform: onEdit)
+
+                Button(action: onDelete) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.45))
+                        .frame(width: 30, height: 30)
+                }
+                .padding(.top, 4)
+                .padding(.trailing, 4)
+            } else {
+                Button(action: onEdit) {
+                    Text("写一句")
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.6))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                }
+            }
+        }
+        .background(hasCaption ? Color.white.opacity(0.05) : Color.clear)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 }
 
