@@ -15,7 +15,6 @@ struct TimelineView: View {
 
     @State private var fillDate: String?
     @State private var showFillAction = false
-    @State private var showFillCamera = false
     @State private var showFillText = false
     @State private var showFillSketch = false
     @State private var noteDraft = ""
@@ -153,7 +152,6 @@ struct TimelineView: View {
             TimelineDetailPager(entries: previewEntries, initialIndex: previewIndex)
         }
         .confirmationDialog("补记这一天", isPresented: $showFillAction, titleVisibility: .visible) {
-            Button("拍照") { showFillCamera = true }
             Button("写文字") { showFillText = true }
             Button("白板") { showFillSketch = true; sketchDrawing = PKDrawing() }
             Button("取消", role: .cancel) {}
@@ -162,13 +160,6 @@ struct TimelineView: View {
                 Text("补记到 \(fillDate)")
             } else {
                 Text("选择补记方式")
-            }
-        }
-        .fullScreenCover(isPresented: $showFillCamera) {
-            if let date = fillDate {
-                CameraView { imageData, movieURL in
-                    Task { await savePhoto(imageData: imageData, movieURL: movieURL, targetDate: date) }
-                }
             }
         }
         .sheet(isPresented: $showFillText) {
@@ -214,17 +205,6 @@ struct TimelineView: View {
         fillDate = dateKey
         noteDraft = ""
         showFillAction = true
-    }
-
-    private func savePhoto(imageData: Data, movieURL: URL?, targetDate: String) async {
-        do {
-            _ = try await store.saveLivePhoto(imageData: imageData, videoURL: movieURL, date: targetDate, context: context)
-            await load()
-        } catch {
-            print("Save photo for fill failed:", error)
-        }
-        fillDate = nil
-        showFillCamera = false
     }
 
     private func saveText(_ text: String) {
