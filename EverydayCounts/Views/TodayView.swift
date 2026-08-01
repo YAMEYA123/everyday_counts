@@ -445,12 +445,12 @@ struct VlogFrameView: View {
             }
         }
         .frame(width: maxHeight * aspectRatio, height: maxHeight)
-        .frame(maxWidth: .infinity)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
         .overlay {
             RoundedRectangle(cornerRadius: cornerRadius)
                 .stroke(Color.white.opacity(0.16), lineWidth: 1)
         }
+        .frame(maxWidth: .infinity)
     }
 }
 
