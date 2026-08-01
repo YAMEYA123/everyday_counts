@@ -39,23 +39,19 @@ struct TodayView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 12) {
-                    HStack(alignment: .bottom) {
+                    HStack {
                         Text(formattedDate())
-                            .font(.system(size: 30, weight: .regular, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.9))
+                            .font(.subheadline)
+                            .foregroundStyle(.white.opacity(0.4))
                         Spacer()
                         if streak > 0 {
                             HStack(spacing: 5) {
                                 Text("✦")
                                     .font(.system(size: 11))
                                 Text("连续 \(streak) 天")
-                                    .font(.system(size: 15, weight: .regular, design: .rounded))
+                                    .font(.subheadline)
                             }
-                            .foregroundStyle(.white.opacity(0.62))
-                            .padding(.horizontal, 11)
-                            .padding(.vertical, 8)
-                            .background(Color.white.opacity(0.08))
-                            .clipShape(Capsule())
+                            .foregroundStyle(.white.opacity(0.55))
                         }
                     }
                     .padding(.horizontal)
@@ -246,7 +242,7 @@ struct TodayView: View {
             .background(Color.black)
             .scrollIndicators(.hidden)
             .navigationTitle("今天")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
         }
         .fullScreenCover(isPresented: $showCamera) {
             CameraView { imageData, movieURL in
