@@ -159,3 +159,27 @@ struct LivePhotoFullscreen: View {
         }
     }
 }
+
+struct TimelineDetailPager: View {
+    let entries: [DailyEntry]
+    let initialIndex: Int
+    @State private var selectedIndex: Int
+
+    init(entries: [DailyEntry], initialIndex: Int) {
+        self.entries = entries
+        self.initialIndex = initialIndex
+        _selectedIndex = State(initialValue: initialIndex)
+    }
+
+    var body: some View {
+        TabView(selection: $selectedIndex) {
+            ForEach(Array(entries.enumerated()), id: \.element.date) { index, entry in
+                LivePhotoFullscreen(entry: entry)
+                    .id(entry.date)
+                    .tag(index)
+            }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        .background(Color.black)
+    }
+}

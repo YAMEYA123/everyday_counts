@@ -9,7 +9,9 @@ struct TimelineView: View {
     @State private var year = Calendar.current.component(.year, from: Date())
     @State private var month = Calendar.current.component(.month, from: Date())
     @Query(sort: [SortDescriptor<DailyEntry>(\.date)]) private var allEntries: [DailyEntry]
-    @State private var preview: DailyEntry?
+    @State private var previewEntries: [DailyEntry] = []
+    @State private var previewIndex = 0
+    @State private var showDetailPager = false
 
     @State private var fillDate: String?
     @State private var showFillAction = false
@@ -59,6 +61,14 @@ struct TimelineView: View {
             monthEntries.map { ($0.date, $0) },
             uniquingKeysWith: { _, last in last }
         )
+    }
+
+    private var recordedEntries: [DailyEntry] {
+        let uniqueEntries = Dictionary(
+            allEntries.map { ($0.date, $0) },
+            uniquingKeysWith: { _, last in last }
+        )
+        return uniqueEntries.values.sorted { $0.date < $1.date }
     }
 
     private var previousMonthButton: some View {
@@ -139,7 +149,9 @@ struct TimelineView: View {
             .navigationTitle("时间线")
             .navigationBarTitleDisplayMode(.large)
         }
-        .sheet(item: $preview) { LivePhotoFullscreen(entry: $0) }
+        .sheet(isPresented: $showDetailPager) {
+            TimelineDetailPager(entries: previewEntries, initialIndex: previewIndex)
+        }
         .confirmationDialog("补记这一天", isPresented: $showFillAction, titleVisibility: .visible) {
             Button("拍照") { showFillCamera = true }
             Button("写文字") { showFillText = true }
@@ -190,7 +202,11 @@ struct TimelineView: View {
 
     private func handleCellTap(dateKey: String, entry: DailyEntry?) {
         if let entry {
-            preview = entry
+            let entries = recordedEntries
+            guard let index = entries.firstIndex(where: { $0.date == entry.date }) else { return }
+            previewEntries = entries
+            previewIndex = index
+            showDetailPager = true
             return
         }
 
