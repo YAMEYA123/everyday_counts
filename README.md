@@ -11,7 +11,7 @@ A minimalist daily photo diary for iOS. One photo per day — one moment, one me
 
 ## 功能 Features
 
-- **每日记录 Daily Capture** — 支持 Live Photo、相册图片和截图上传；当日可重新拍摄或替换，9:16 回顾构图参考，闪光灯 / 变焦控制，手势捏合调焦
+- **每日记录 Daily Capture** — 支持 Live Photo、相册图片和截图上传；当日可重新拍摄或替换，3:4 日常卡片构图参考，闪光灯 / 变焦控制，手势捏合调焦
 - **今日页 Home** — 以照片为唯一主视觉，日期和操作退到背景，保持安静、克制的记录体验
 - **新用户入口 First Run** — 空状态提供一个明确的“拍一张”主入口，同时保留相册、文字和白板记录
 - **时间窗与补记规则** — 当日截至 23:59:59 后自动锁定；过期后只允许对空缺日期进行一次性补记

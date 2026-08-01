@@ -35,15 +35,15 @@ struct CameraView: View {
                 }
                 .padding(.top, 8)
 
-                // Viewfinder — 9:16 vlog framing guide, pinch to zoom
+                // Viewfinder — 3:4 daily card framing guide, pinch to zoom
                 ZStack(alignment: .bottomTrailing) {
                     if let layer = camera.previewLayer {
                         GeometryReader { geo in
                             PreviewLayerView(layer: layer)
-                                .frame(width: geo.size.width, height: geo.size.width / MediaPresentation.vlogAspectRatio)
+                                .frame(width: geo.size.width, height: geo.size.width / MediaPresentation.todayAspectRatio)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
-                        .aspectRatio(MediaPresentation.vlogAspectRatio, contentMode: .fit)
+                        .aspectRatio(MediaPresentation.todayAspectRatio, contentMode: .fit)
                         .gesture(
                             MagnificationGesture()
                                 .onChanged { scale in
@@ -56,13 +56,13 @@ struct CameraView: View {
                     } else {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color.white.opacity(0.05))
-                            .aspectRatio(MediaPresentation.vlogAspectRatio, contentMode: .fit)
+                            .aspectRatio(MediaPresentation.todayAspectRatio, contentMode: .fit)
                     }
                     // Shutter flash overlay
                     if shutterFlash {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color.white.opacity(0.75))
-                            .aspectRatio(MediaPresentation.vlogAspectRatio, contentMode: .fit)
+                            .aspectRatio(MediaPresentation.todayAspectRatio, contentMode: .fit)
                             .allowsHitTesting(false)
                     }
                     // Zoom label overlay
