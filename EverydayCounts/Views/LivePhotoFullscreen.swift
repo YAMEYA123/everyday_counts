@@ -126,12 +126,13 @@ struct LivePhotoFullscreen: View {
     private func load() async {
         switch entry.kind {
         case .photo:
-            guard !entry.assetIdentifier.isEmpty else { return }
-            guard let fetched = PHAsset.fetchAssets(
-                withLocalIdentifiers: [entry.assetIdentifier], options: nil
-            ).firstObject else { return }
-
-            let asset = await store.restoreIfNeeded(entry: entry, context: context) ?? fetched
+            let asset: PHAsset?
+            if let resolved = store.resolveAsset(identifier: entry.assetIdentifier) {
+                asset = resolved
+            } else {
+                asset = await store.restoreIfNeeded(entry: entry, context: context)
+            }
+            guard let asset else { return }
 
             if let movieURL = await store.pairedMovieURL(for: asset) {
                 liveMovieURL = movieURL
