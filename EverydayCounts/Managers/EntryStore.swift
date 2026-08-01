@@ -250,7 +250,7 @@ class EntryStore: ObservableObject {
         }
 
         do {
-            let extractedURL = try await withCheckedThrowingContinuation { continuation in
+			let extractedURL = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
                 let options = PHAssetResourceRequestOptions()
                 options.isNetworkAccessAllowed = true
 
