@@ -15,6 +15,7 @@ A minimalist daily photo diary for iOS. One photo per day — one moment, one me
 - **时间窗与补记规则** — 当日截至 23:59:59 后自动锁定；过期后只允许对空缺日期进行一次性补记
 - **防误删备份 Auto Restore** — 照片保存至系统相册专属「Everyday Counts」相册，同时写入本地备份；从相册删除后下次打开自动还原
 - **索引恢复 Index Recovery** — 重装或 Bundle ID 变化后，可从「Everyday Counts」系统相册按拍摄日期重建时间线索引，不删除原照片
+- **手动恢复 Manual Recovery** — 设置页可查看相册扫描数量与恢复数量，便于确认历史照片是否可被重新索引
 - **时间线 Timeline** — 月历视图浏览每天的记录，支持点击全屏预览照片/文字/白板
 - **回顾视频 Recap Video** — 一键生成月 / 年滑动回顾视频（每张 1.5 秒）
 - **连续打卡 Streak** — 统计连续记录天数，✦ 显示在今日页

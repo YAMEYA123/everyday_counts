@@ -1,9 +1,14 @@
 import SwiftUI
+import SwiftData
 
 struct SettingsView: View {
+    @Environment(\.modelContext) private var context
+    @StateObject private var store = EntryStore()
     @State private var reminderDate = NotificationManager.shared.reminderDate
     @State private var isAuthorized = false
     @State private var showPermissionAlert = false
+    @State private var showRecoveryAlert = false
+    @State private var recoveryMessage = ""
     @AppStorage("reminderEnabled") private var reminderEnabled = false
 
     var body: some View {
@@ -40,6 +45,14 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Button {
+                        let result = store.rebuildEntriesFromAlbum(context: context)
+                        recoveryMessage = "扫描到 \(result.scanned) 张相册照片，恢复了 \(result.recovered) 条时间线记录。"
+                        showRecoveryAlert = true
+                    } label: {
+                        Label("从系统相册恢复时间线", systemImage: "arrow.clockwise")
+                    }
+
                     HStack {
                         Text("版本")
                         Spacer()
@@ -72,6 +85,11 @@ struct SettingsView: View {
             Button("取消", role: .cancel) {}
         } message: {
             Text("请在「设置 → 通知 → EverydayCounts」中开启通知权限。")
+        }
+        .alert("恢复结果", isPresented: $showRecoveryAlert) {
+            Button("好", role: .cancel) {}
+        } message: {
+            Text(recoveryMessage)
         }
         .task { isAuthorized = await NotificationManager.shared.isAuthorized() }
     }

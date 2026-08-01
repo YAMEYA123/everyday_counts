@@ -174,9 +174,9 @@ class EntryStore: ObservableObject {
     /// This recovers records after a reinstall or Bundle ID change without
     /// deleting or replacing anything in Photos.
     @discardableResult
-    func rebuildEntriesFromAlbum(context: ModelContext) -> Int {
+    func rebuildEntriesFromAlbum(context: ModelContext) -> (scanned: Int, recovered: Int) {
         let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-        guard status == .authorized || status == .limited else { return 0 }
+        guard status == .authorized || status == .limited else { return (0, 0) }
 
         let albums = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil)
         var album: PHAssetCollection?
@@ -186,7 +186,7 @@ class EntryStore: ObservableObject {
                 stop.pointee = true
             }
         }
-        guard let album else { return 0 }
+        guard let album else { return (0, 0) }
 
         let options = PHFetchOptions()
         options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: true)]
@@ -209,7 +209,7 @@ class EntryStore: ObservableObject {
         if recovered > 0 {
             try? context.save()
         }
-        return recovered
+        return (assets.count, recovered)
     }
 
     func currentStreak(context: ModelContext) -> Int {
