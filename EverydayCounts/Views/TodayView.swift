@@ -66,7 +66,7 @@ struct TodayView: View {
                                         playTrigger: playTrigger
                                     )
                                     .frame(maxWidth: .infinity)
-                                    .aspectRatio(3.0 / 4.0, contentMode: .fit)
+                                    .frame(height: 350)
                                     .clipShape(RoundedRectangle(cornerRadius: 16))
                                     .onLongPressGesture(minimumDuration: 0.3) {
                                         playTrigger += 1
@@ -77,7 +77,7 @@ struct TodayView: View {
                                     Image(uiImage: img)
                                         .resizable().scaledToFill()
                                         .frame(maxWidth: .infinity)
-                                        .aspectRatio(3.0 / 4.0, contentMode: .fit)
+                                        .frame(height: 350)
                                         .clipShape(RoundedRectangle(cornerRadius: 16))
                                 }
                             } else if entry.kind == .text {
@@ -99,7 +99,7 @@ struct TodayView: View {
                                 Image(uiImage: img)
                                     .resizable().scaledToFill()
                                     .frame(maxWidth: .infinity)
-                                    .aspectRatio(3.0 / 4.0, contentMode: .fit)
+                                    .frame(height: 350)
                                     .clipShape(RoundedRectangle(cornerRadius: 16))
                             }
                             if entry.kind == .photo && liveMovieURL != nil {
@@ -256,7 +256,7 @@ struct TodayView: View {
                             .padding(.horizontal)
                     }
                 }
-                .padding(.top, 8)
+                .padding(.top, 4)
             }
             .background(Color.black)
             .scrollIndicators(.hidden)
@@ -445,7 +445,7 @@ struct CaptionCardView: View {
                     .foregroundStyle(.white.opacity(0.92))
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, 28)
-                    .padding(.vertical, 24)
+                    .padding(.vertical, 16)
                     .contentShape(Rectangle())
                     .onTapGesture(count: 2, perform: onEdit)
 
