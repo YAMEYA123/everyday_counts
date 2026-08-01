@@ -163,11 +163,12 @@ class EntryStore: ObservableObject {
 
     func entries(year: Int, month: Int?, context: ModelContext) -> [DailyEntry] {
         let prefix = month.map { String(format: "%04d-%02d", year, $0) } ?? String(year)
-        let descriptor = FetchDescriptor<DailyEntry>(
-            predicate: #Predicate { $0.date.starts(with: prefix) },
-            sortBy: [SortDescriptor(\.date)]
-        )
-        return (try? context.fetch(descriptor)) ?? []
+        let descriptor = FetchDescriptor<DailyEntry>(sortBy: [SortDescriptor(\.date)])
+        guard let allEntries = try? context.fetch(descriptor) else { return [] }
+
+        // SwiftData's string starts(with:) predicate is not reliable across iOS versions.
+        // The dataset is intentionally small, so filter the fetched index in memory.
+        return allEntries.filter { $0.date.hasPrefix(prefix) }
     }
 
     /// Rebuild missing photo indexes from the app's system album.
