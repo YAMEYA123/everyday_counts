@@ -29,11 +29,13 @@ struct LivePhotoFullscreen: View {
                         autoplay: true
                     )
                     .ignoresSafeArea()
+                    .offset(y: -32)
                 } else if let image = thumbnail {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFit()
                         .ignoresSafeArea()
+                        .offset(y: -32)
                 } else {
                     ProgressView().tint(.white)
                 }
@@ -53,6 +55,7 @@ struct LivePhotoFullscreen: View {
                         .resizable()
                         .scaledToFit()
                         .ignoresSafeArea()
+                        .offset(y: -32)
                 } else {
                     ProgressView().tint(.white)
                 }
