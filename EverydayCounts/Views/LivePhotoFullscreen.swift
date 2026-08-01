@@ -28,11 +28,13 @@ struct LivePhotoFullscreen: View {
                         videoGravity: .resizeAspect,
                         autoplay: true
                     )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .ignoresSafeArea()
                 } else if let image = thumbnail {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFit()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .ignoresSafeArea()
                 } else {
                     ProgressView().tint(.white)
@@ -52,6 +54,7 @@ struct LivePhotoFullscreen: View {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFit()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .ignoresSafeArea()
                 } else {
                     ProgressView().tint(.white)
@@ -80,6 +83,7 @@ struct LivePhotoFullscreen: View {
                     .padding(.bottom, 40)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .task { await load() }
         .sheet(isPresented: $showCaptionSheet) {
             TextNoteSheet(
@@ -195,5 +199,6 @@ struct TimelineDetailPager: View {
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
         .background(Color.black)
+        .ignoresSafeArea()
     }
 }

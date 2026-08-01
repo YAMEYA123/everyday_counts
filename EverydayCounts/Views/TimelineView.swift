@@ -148,7 +148,7 @@ struct TimelineView: View {
             .navigationTitle("时间线")
             .navigationBarTitleDisplayMode(.large)
         }
-        .sheet(isPresented: $showDetailPager) {
+        .fullScreenCover(isPresented: $showDetailPager) {
             TimelineDetailPager(entries: previewEntries, initialIndex: previewIndex)
         }
         .confirmationDialog("补记这一天", isPresented: $showFillAction, titleVisibility: .visible) {
