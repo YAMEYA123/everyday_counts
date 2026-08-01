@@ -9,6 +9,13 @@ import WidgetKit
 class EntryStore: ObservableObject {
     static let albumName = "Everyday Counts"
 
+    struct AlbumRecoveryResult {
+        let scanned: Int
+        let recovered: Int
+        let dates: [String]
+        let saveError: String?
+    }
+
     private enum EntryStoreError: Error {
         case notEditable
         case writeFailure
@@ -164,7 +171,10 @@ class EntryStore: ObservableObject {
     func entries(year: Int, month: Int?, context: ModelContext) -> [DailyEntry] {
         let prefix = month.map { String(format: "%04d-%02d", year, $0) } ?? String(year)
         let descriptor = FetchDescriptor<DailyEntry>(sortBy: [SortDescriptor(\.date)])
-        guard let allEntries = try? context.fetch(descriptor) else { return [] }
+        guard let allEntries = try? context.fetch(descriptor) else {
+            print("Timeline fetch failed")
+            return []
+        }
 
         // SwiftData's string starts(with:) predicate is not reliable across iOS versions.
         // The dataset is intentionally small, so filter the fetched index in memory.
@@ -175,9 +185,11 @@ class EntryStore: ObservableObject {
     /// This recovers records after a reinstall or Bundle ID change without
     /// deleting or replacing anything in Photos.
     @discardableResult
-    func rebuildEntriesFromAlbum(context: ModelContext) -> (scanned: Int, recovered: Int) {
+    func rebuildEntriesFromAlbum(context: ModelContext) -> AlbumRecoveryResult {
         let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-        guard status == .authorized || status == .limited else { return (0, 0) }
+        guard status == .authorized || status == .limited else {
+            return AlbumRecoveryResult(scanned: 0, recovered: 0, dates: [], saveError: "照片权限不是完全访问")
+        }
 
         let albums = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil)
         var album: PHAssetCollection?
@@ -187,12 +199,15 @@ class EntryStore: ObservableObject {
                 stop.pointee = true
             }
         }
-        guard let album else { return (0, 0) }
+        guard let album else {
+            return AlbumRecoveryResult(scanned: 0, recovered: 0, dates: [], saveError: "找不到 Everyday Counts 相册")
+        }
 
         let options = PHFetchOptions()
         options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: true)]
         let assets = PHAsset.fetchAssets(in: album, options: options)
         var recovered = 0
+        var recoveredDates: [String] = []
 
         assets.enumerateObjects { asset, _, _ in
             guard let assetDate = asset.creationDate ?? asset.modificationDate else { return }
@@ -205,12 +220,23 @@ class EntryStore: ObservableObject {
                 kind: .photo
             ))
             recovered += 1
+            recoveredDates.append(date)
         }
 
+        var saveError: String?
         if recovered > 0 {
-            try? context.save()
+            do {
+                try context.save()
+            } catch {
+                saveError = error.localizedDescription
+            }
         }
-        return (assets.count, recovered)
+        return AlbumRecoveryResult(
+            scanned: assets.count,
+            recovered: recovered,
+            dates: recoveredDates.sorted(),
+            saveError: saveError
+        )
     }
 
     func currentStreak(context: ModelContext) -> Int {

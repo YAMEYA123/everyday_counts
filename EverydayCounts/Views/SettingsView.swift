@@ -47,7 +47,13 @@ struct SettingsView: View {
                 Section {
                     Button {
                         let result = store.rebuildEntriesFromAlbum(context: context)
-                        recoveryMessage = "扫描到 \(result.scanned) 张相册照片，恢复了 \(result.recovered) 条时间线记录。"
+                        if let saveError = result.saveError {
+                            recoveryMessage = "扫描到 \(result.scanned) 张照片，尝试恢复 \(result.recovered) 条，但保存失败：\n\(saveError)"
+                        } else if let first = result.dates.first, let last = result.dates.last {
+                            recoveryMessage = "扫描到 \(result.scanned) 张照片，恢复了 \(result.recovered) 条记录。\n日期范围：\(first) 至 \(last)"
+                        } else {
+                            recoveryMessage = "扫描到 \(result.scanned) 张照片，恢复了 0 条新记录。"
+                        }
                         showRecoveryAlert = true
                     } label: {
                         Label("从系统相册恢复时间线", systemImage: "arrow.clockwise")
