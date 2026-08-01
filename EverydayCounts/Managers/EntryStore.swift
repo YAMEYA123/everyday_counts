@@ -349,6 +349,9 @@ class EntryStore: ObservableObject {
             throw EntryStoreError.notEditable
         }
 
+        let preservedCaption = entry(for: date, context: context).flatMap { existing in
+            (existing.kind == .photo || existing.kind == .sketch) ? existing.noteText : nil
+        }
         if let existing = entry(for: date, context: context), canEdit(date: date) {
             removeExistingIfAny(date: date, context: context)
             removeLocalSketchFile(existing.sketchPath)
@@ -365,7 +368,12 @@ class EntryStore: ObservableObject {
             throw EntryStoreError.writeFailure
         }
         let assetID = try await writeToPhotoLibrary(imageData: imageData, videoURL: videoURL, album: album)
-        let entry = DailyEntry(date: date, assetIdentifier: assetID, kind: .photo)
+        let entry = DailyEntry(
+            date: date,
+            assetIdentifier: assetID,
+            kind: .photo,
+            noteText: preservedCaption
+        )
         context.insert(entry)
         try context.save()
         NotificationCenter.default.post(name: .everydayCountsTimelineNeedsRefresh, object: nil)
@@ -377,6 +385,9 @@ class EntryStore: ObservableObject {
             throw EntryStoreError.notEditable
         }
 
+        let preservedCaption = entry(for: date, context: context).flatMap { existing in
+            (existing.kind == .photo || existing.kind == .sketch) ? existing.noteText : nil
+        }
         if let existing = entry(for: date, context: context), canEdit(date: date) {
             removeExistingIfAny(date: date, context: context)
             removeLocalSketchFile(existing.sketchPath)
@@ -393,11 +404,28 @@ class EntryStore: ObservableObject {
             throw EntryStoreError.writeFailure
         }
         let assetID = try await writeToPhotoLibrary(imageData: imageData, videoURL: nil, album: album)
-        let entry = DailyEntry(date: date, assetIdentifier: assetID, kind: .photo)
+        let entry = DailyEntry(
+            date: date,
+            assetIdentifier: assetID,
+            kind: .photo,
+            noteText: preservedCaption
+        )
         context.insert(entry)
         try context.save()
         NotificationCenter.default.post(name: .everydayCountsTimelineNeedsRefresh, object: nil)
         return assetID
+    }
+
+    /// Captions are metadata and remain editable even after the day's media is sealed.
+    func updateCaption(_ text: String?, for date: String, context: ModelContext) throws {
+        guard let entry = entry(for: date, context: context) else {
+            throw EntryStoreError.writeFailure
+        }
+
+        let normalized = text?.trimmingCharacters(in: .whitespacesAndNewlines)
+        entry.noteText = normalized?.isEmpty == false ? normalized : nil
+        try context.save()
+        NotificationCenter.default.post(name: .everydayCountsTimelineNeedsRefresh, object: nil)
     }
 
     func saveText(_ text: String, date: String, context: ModelContext) {

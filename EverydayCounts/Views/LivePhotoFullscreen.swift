@@ -11,6 +11,11 @@ struct LivePhotoFullscreen: View {
     @State private var liveMovieURL: URL?
     @State private var thumbnail: UIImage?
     @State private var sketchImage: UIImage?
+    @State private var showCaptionSheet = false
+    @State private var captionDraft = ""
+    @State private var showDeleteCaptionConfirm = false
+    @State private var showSaveError = false
+    @State private var saveErrorMessage = ""
 
     var body: some View {
         ZStack {
@@ -66,6 +71,9 @@ struct LivePhotoFullscreen: View {
                     Spacer()
                 }
                 Spacer()
+                if entry.kind == .photo || entry.kind == .sketch {
+                    captionPanel
+                }
                 Text(entry.date)
                     .font(.caption)
                     .foregroundStyle(.white.opacity(0.4))
@@ -73,6 +81,69 @@ struct LivePhotoFullscreen: View {
             }
         }
         .task { await load() }
+        .sheet(isPresented: $showCaptionSheet) {
+            TextNoteSheet(
+                isPresented: $showCaptionSheet,
+                text: $captionDraft,
+                title: "今天的一句话"
+            ) { text in
+                saveCaption(text)
+            } onCancel: {
+                captionDraft = ""
+            }
+        }
+        .confirmationDialog(
+            "删除这句说明？",
+            isPresented: $showDeleteCaptionConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("删除说明", role: .destructive) {
+                saveCaption(nil)
+            }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("照片和当天记录不会受到影响")
+        }
+        .alert("保存失败", isPresented: $showSaveError) {
+            Button("好", role: .cancel) {}
+        } message: {
+            Text(saveErrorMessage)
+        }
+    }
+
+    @ViewBuilder
+    private var captionPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let caption = entry.noteText, !caption.isEmpty {
+                Text(caption)
+                    .font(.body)
+                    .foregroundStyle(.white.opacity(0.9))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                Text("还没有写下今天的心情")
+                    .font(.subheadline)
+                    .foregroundStyle(.white.opacity(0.45))
+            }
+
+            HStack(spacing: 16) {
+                Button(entry.noteText?.isEmpty == false ? "编辑说明" : "写一句今天") {
+                    captionDraft = entry.noteText ?? ""
+                    showCaptionSheet = true
+                }
+                if entry.noteText?.isEmpty == false {
+                    Button("删除", role: .destructive) {
+                        showDeleteCaptionConfirm = true
+                    }
+                }
+            }
+            .font(.subheadline)
+            .foregroundStyle(.white.opacity(0.65))
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 16)
     }
 
     private func load() async {
@@ -111,6 +182,16 @@ struct LivePhotoFullscreen: View {
             break
         case .sketch:
             sketchImage = store.loadSketchImage(for: entry)
+        }
+    }
+
+    private func saveCaption(_ text: String?) {
+        do {
+            try store.updateCaption(text, for: entry.date, context: context)
+            captionDraft = ""
+        } catch {
+            saveErrorMessage = error.localizedDescription
+            showSaveError = true
         }
     }
 }

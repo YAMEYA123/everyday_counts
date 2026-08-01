@@ -24,6 +24,9 @@ struct TodayView: View {
     @State private var saveErrorMessage = ""
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showPhotoPicker = false
+    @State private var showCaptionSheet = false
+    @State private var captionDraft = ""
+    @State private var showDeleteCaptionConfirm = false
     @AppStorage("hasShownLiveHint") private var hasShownLiveHint = false
 
     private var todayKey: String {
@@ -120,6 +123,47 @@ struct TodayView: View {
                             }
                         }
                         .padding(.horizontal)
+                        if entry.kind == .photo || entry.kind == .sketch {
+                            VStack(alignment: .leading, spacing: 8) {
+                                if let caption = entry.noteText, !caption.isEmpty {
+                                    Text(caption)
+                                        .font(.body)
+                                        .foregroundStyle(.white.opacity(0.85))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                } else {
+                                    Text("还没有写下今天的心情")
+                                        .font(.subheadline)
+                                        .foregroundStyle(.white.opacity(0.35))
+                                }
+
+                                HStack(spacing: 16) {
+                                    Button(entry.noteText?.isEmpty == false ? "编辑说明" : "写一句今天") {
+                                        captionDraft = entry.noteText ?? ""
+                                        showCaptionSheet = true
+                                    }
+                                    if entry.noteText?.isEmpty == false {
+                                        Button("删除", role: .destructive) {
+                                            showDeleteCaptionConfirm = true
+                                        }
+                                    }
+                                }
+                                .font(.subheadline)
+                                .foregroundStyle(.white.opacity(0.5))
+                            }
+                            .padding(.horizontal)
+                            .confirmationDialog(
+                                "删除这句说明？",
+                                isPresented: $showDeleteCaptionConfirm,
+                                titleVisibility: .visible
+                            ) {
+                                Button("删除说明", role: .destructive) {
+                                    saveCaption(nil, targetDate: todayKey)
+                                }
+                                Button("取消", role: .cancel) {}
+                            } message: {
+                                Text("照片和当天记录不会受到影响")
+                            }
+                        }
                         if canEditToday {
                             if entry.kind == .photo {
                                 HStack(spacing: 18) {
@@ -219,6 +263,17 @@ struct TodayView: View {
                 saveText(targetDate: todayKey)
             } onCancel: { noteDraft = "" }
         }
+        .sheet(isPresented: $showCaptionSheet) {
+            TextNoteSheet(
+                isPresented: $showCaptionSheet,
+                text: $captionDraft,
+                title: "今天的一句话"
+            ) { text in
+                saveCaption(text, targetDate: todayKey)
+            } onCancel: {
+                captionDraft = ""
+            }
+        }
         .sheet(isPresented: $showSketchSheet) {
             SketchBoardSheet(drawing: $sketchDrawing) { png in
                 showSketchSheet = false
@@ -315,6 +370,17 @@ struct TodayView: View {
         }
     }
 
+    private func saveCaption(_ text: String?, targetDate: String) {
+        do {
+            try store.updateCaption(text, for: targetDate, context: context)
+            captionDraft = ""
+            Task { await load() }
+        } catch {
+            saveErrorMessage = error.localizedDescription
+            showSaveError = true
+        }
+    }
+
     private func saveText(targetDate: String) {
         let text = noteDraft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
@@ -342,6 +408,7 @@ struct TodayView: View {
 struct TextNoteSheet: View {
     @Binding var isPresented: Bool
     @Binding var text: String
+    var title = "写下今天"
     var onSave: (String) -> Void
     var onCancel: () -> Void
 
@@ -373,7 +440,7 @@ struct TextNoteSheet: View {
             }
             .padding()
             .background(Color.black)
-            .navigationTitle("写下今天")
+            .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
         }
     }

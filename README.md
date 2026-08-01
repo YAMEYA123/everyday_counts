@@ -14,6 +14,7 @@ A minimalist daily photo diary for iOS. One photo per day — one moment, one me
 - **每日记录 Daily Capture** — 支持 Live Photo、相册图片和截图上传；当日可重新拍摄或替换，4:3 取景框，闪光灯 / 变焦控制，手势捏合调焦
 - **时间窗与补记规则** — 当日截至 23:59:59 后自动锁定；过期后只允许对空缺日期进行一次性补记
 - **白板补记 Sketch Notes** — 白色画布、黑色默认画笔，支持颜色、笔刷粗细和橡皮擦，保存时保留白色背景
+- **每日一句 Daily Caption** — 可为照片或白板添加一句说明；照片主体封存后，说明仍可随时编辑或删除
 - **防误删备份 Auto Restore** — 照片保存至系统相册专属「Everyday Counts」相册，同时写入本地备份；从相册删除后下次打开自动还原
 - **索引恢复 Index Recovery** — 重装或 Bundle ID 变化后，可从「Everyday Counts」系统相册按拍摄日期重建时间线索引，不删除原照片
 - **手动恢复 Manual Recovery** — 设置页可查看相册扫描数量与恢复数量，便于确认历史照片是否可被重新索引
