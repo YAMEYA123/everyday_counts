@@ -285,7 +285,7 @@ class EntryStore: ObservableObject {
             throw EntryStoreError.notEditable
         }
 
-        saveBackup(imageData: imageData, date: date)
+		Self.saveBackup(imageData: imageData, date: date)
         Self.writeWidgetData(date: date, imageData: imageData)
 
         guard let album = await ensureAlbumExists() else {
