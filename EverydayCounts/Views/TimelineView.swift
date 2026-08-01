@@ -8,7 +8,7 @@ struct TimelineView: View {
     @StateObject private var store = EntryStore()
     @State private var year = Calendar.current.component(.year, from: Date())
     @State private var month = Calendar.current.component(.month, from: Date())
-    @State private var entryMap: [String: DailyEntry] = [:]
+    @Query(sort: \.date) private var allEntries: [DailyEntry]
     @State private var preview: DailyEntry?
 
     @State private var fillDate: String?
@@ -50,6 +50,15 @@ struct TimelineView: View {
 
     private var gridColumns: [GridItem] {
         Array(repeating: GridItem(.flexible(), spacing: 2), count: 7)
+    }
+
+    private var entryMap: [String: DailyEntry] {
+        let prefix = String(format: "%04d-%02d", year, month)
+        let monthEntries = allEntries.filter { $0.date.hasPrefix(prefix) }
+        return Dictionary(
+            monthEntries.map { ($0.date, $0) },
+            uniquingKeysWith: { _, last in last }
+        )
     }
 
     private var previousMonthButton: some View {
@@ -177,8 +186,6 @@ struct TimelineView: View {
 
     private func load() async {
         store.rebuildEntriesFromAlbum(context: context)
-        let entries = store.entries(year: year, month: month, context: context)
-        entryMap = Dictionary(entries.map { ($0.date, $0) }, uniquingKeysWith: { _, last in last })
     }
 
     private func handleCellTap(dateKey: String, entry: DailyEntry?) {
