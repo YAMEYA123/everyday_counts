@@ -20,7 +20,7 @@ struct LivePhotoFullscreen: View {
                 if let movieURL = liveMovieURL {
                     LivePhotoMovieView(
                         url: movieURL,
-                        videoGravity: .resizeAspectFit,
+                        videoGravity: .resizeAspect,
                         autoplay: true
                     )
                     .ignoresSafeArea()
