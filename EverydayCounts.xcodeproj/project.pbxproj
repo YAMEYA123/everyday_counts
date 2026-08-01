@@ -22,6 +22,7 @@
 		AA000000000000000000002E /* LivePhotoFullscreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000020 /* LivePhotoFullscreen.swift */; };
 		AA000000000000000000002F /* ReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000021 /* ReviewView.swift */; };
 		AA000000000000000000003A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003B /* SettingsView.swift */; };
+		AA000000000000000000003C /* LivePhotoMovieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003D /* LivePhotoMovieView.swift */; };
 		BB00000000000000000000F7 /* EverydayCountsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00000000000000000000F4 /* EverydayCountsWidget.swift */; };
 		BB0000000000000000000102 /* EverydayCountsWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BB00000000000000000000F1 /* EverydayCountsWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -43,6 +44,7 @@
 		AA0000000000000000000020 /* LivePhotoFullscreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivePhotoFullscreen.swift; sourceTree = "<group>"; };
 		AA0000000000000000000021 /* ReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewView.swift; sourceTree = "<group>"; };
 		AA000000000000000000003B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		AA000000000000000000003D /* LivePhotoMovieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivePhotoMovieView.swift; sourceTree = "<group>"; };
 		BB00000000000000000000F1 /* EverydayCountsWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = EverydayCountsWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB00000000000000000000F4 /* EverydayCountsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EverydayCountsWidget.swift; sourceTree = "<group>"; };
 		BB00000000000000000000F5 /* EverydayCountsWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EverydayCountsWidget.entitlements; sourceTree = "<group>"; };
@@ -161,6 +163,7 @@
 				AA0000000000000000000020 /* LivePhotoFullscreen.swift */,
 				AA0000000000000000000021 /* ReviewView.swift */,
 				AA000000000000000000003B /* SettingsView.swift */,
+				AA000000000000000000003D /* LivePhotoMovieView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -279,6 +282,7 @@
 				AA000000000000000000002E /* LivePhotoFullscreen.swift in Sources */,
 				AA000000000000000000002F /* ReviewView.swift in Sources */,
 				AA000000000000000000003A /* SettingsView.swift in Sources */,
+				AA000000000000000000003C /* LivePhotoMovieView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
