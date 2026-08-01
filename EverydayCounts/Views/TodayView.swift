@@ -180,11 +180,17 @@ struct TodayView: View {
                             ) {
                                 if entry.kind == .photo {
                                     Button("重拍照片", role: .destructive) { showCamera = true }
-                                    Button("从相册选择") { selectedPhoto = nil; showPhotoPicker = true }
+                                    Button("从相册选择") {
+                                        selectedPhoto = nil
+                                        showPhotoPicker = true
+                                    }
                                 } else {
                                     Button("重拍照片", role: .destructive) { showCamera = true }
                                     Button("改为文字") { showTextSheet = true }
-                                    Button("改为白板") { showSketchSheet = true; sketchDrawing = PKDrawing() }
+                                    Button("改为白板") {
+                                        showSketchSheet = true
+                                        sketchDrawing = PKDrawing()
+                                    }
                                 }
                                 Button("取消", role: .cancel) {}
                             } message: {
