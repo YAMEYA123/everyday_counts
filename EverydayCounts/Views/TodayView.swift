@@ -120,16 +120,12 @@ struct TodayView: View {
                         }
                         .padding(.horizontal)
                         if entry.kind == .photo || entry.kind == .sketch {
-                            VStack(alignment: .leading, spacing: 6) {
+                            VStack(alignment: .leading, spacing: 8) {
                                 if let caption = entry.noteText, !caption.isEmpty {
                                     Text(caption)
                                         .font(.body)
                                         .foregroundStyle(.white.opacity(0.85))
                                         .frame(maxWidth: .infinity, alignment: .leading)
-                                } else {
-                                    Text("写一句今天")
-                                        .font(.subheadline)
-                                        .foregroundStyle(.white.opacity(0.35))
                                 }
 
                                 HStack(spacing: 16) {
@@ -142,9 +138,19 @@ struct TodayView: View {
                                             showDeleteCaptionConfirm = true
                                         }
                                     }
+                                    if canEditToday {
+                                        if entry.kind == .photo {
+                                            Button("重拍") { showRetakeConfirm = true }
+                                            PhotosPicker(selection: $selectedPhoto, matching: .images, photoLibrary: .shared()) {
+                                                Text("换一张")
+                                            }
+                                        } else {
+                                            Button("替换") { showRetakeConfirm = true }
+                                        }
+                                    }
                                 }
                                 .font(.subheadline)
-                                .foregroundStyle(.white.opacity(0.5))
+                                .foregroundStyle(.white.opacity(0.62))
                             }
                             .padding(.horizontal)
                             .confirmationDialog(
@@ -159,35 +165,24 @@ struct TodayView: View {
                             } message: {
                                 Text("照片和当天记录不会受到影响")
                             }
-                        }
-                        if canEditToday {
-                            if entry.kind == .photo {
-                                HStack(spacing: 20) {
-                                    Button("重拍") { showRetakeConfirm = true }
-                                    PhotosPicker(selection: $selectedPhoto, matching: .images, photoLibrary: .shared()) {
-                                        Text("换一张")
-                                    }
+                            .confirmationDialog(
+                                "替换今天的记录？",
+                                isPresented: $showRetakeConfirm,
+                                titleVisibility: .visible
+                            ) {
+                                if entry.kind == .photo {
+                                    Button("重拍照片", role: .destructive) { showCamera = true }
+                                    Button("从相册选择") { selectedPhoto = nil; showPhotoPicker = true }
+                                } else {
+                                    Button("重拍照片", role: .destructive) { showCamera = true }
+                                    Button("改为文字") { showTextSheet = true }
+                                    Button("改为白板") { showSketchSheet = true; sketchDrawing = PKDrawing() }
                                 }
-                                .font(.subheadline).foregroundStyle(.white.opacity(0.62))
-                                .confirmationDialog("今天的照片将被替换", isPresented: $showRetakeConfirm, titleVisibility: .visible) {
-                                    Button("确定重拍", role: .destructive) { showCamera = true }
-                                    Button("取消", role: .cancel) {}
-                                } message: {
-                                    Text("今天的记录将被替换")
-                                }
-                            } else {
-                                Button("替换") { showRetakeConfirm = true }
-                                    .font(.subheadline).foregroundStyle(.white.opacity(0.62))
-                                    .confirmationDialog("今天的记录将被替换", isPresented: $showRetakeConfirm, titleVisibility: .visible) {
-                                        Button("重拍照片", role: .destructive) { showCamera = true }
-                                        Button("从相册选择") { selectedPhoto = nil; showPhotoPicker = true }
-                                        Button("改为文字") { showTextSheet = true }
-                                        Button("改为白板") { showSketchSheet = true; sketchDrawing = PKDrawing() }
-                                        Button("取消", role: .cancel) {}
-                                    } message: {
-                                        Text("每天只能保留一个内容，确定要替换吗？")
-                                    }
+                                Button("取消", role: .cancel) {}
+                            } message: {
+                                Text("今天的记录将被替换")
                             }
+                        }
                         }
                     } else if canEditToday {
                         VStack(spacing: 12) {
