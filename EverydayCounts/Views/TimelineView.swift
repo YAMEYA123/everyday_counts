@@ -51,19 +51,24 @@ struct TimelineView: View {
                     }
                     .padding(.horizontal).padding(.vertical, 12)
 
+                    let weekdayLabels = ["一", "二", "三", "四", "五", "六", "日"]
+                    let blankIDs = (0..<firstWeekday).map { "blank-\($0)" }
+                    let calendarDays = (1...daysInMonth).map {
+                        CalendarDayItem(id: "day-\($0)", day: $0)
+                    }
                     let cols = Array(repeating: GridItem(.flexible(), spacing: 2), count: 7)
                     LazyVGrid(columns: cols, spacing: 2) {
-                        ForEach(["一","二","三","四","五","六","日"], id: \.self) {
-                            Text($0).font(.caption2).foregroundStyle(.white.opacity(0.3))
+                        ForEach(weekdayLabels, id: \.self) { label in
+                            Text(label).font(.caption2).foregroundStyle(.white.opacity(0.3))
                                 .frame(maxWidth: .infinity)
                         }
-                        ForEach(0..<firstWeekday, id: { index in "blank-\(index)" }) { _ in
+                        ForEach(blankIDs, id: \.self) { _ in
                             Color.clear.aspectRatio(1, contentMode: .fit)
                         }
-                        ForEach(1...daysInMonth, id: { day in "day-\(day)" }) { day in
-                            let key = String(format: "%04d-%02d-%02d", year, month, day)
+                        ForEach(calendarDays) { item in
+                            let key = String(format: "%04d-%02d-%02d", year, month, item.day)
                             DayCellView(
-                                day: day,
+                                day: item.day,
                                 dateKey: key,
                                 entry: entryMap[key],
                                 isToday: key == todayKey,
@@ -182,6 +187,11 @@ struct TimelineView: View {
     private func nextMonth() {
         if month == 12 { year += 1; month = 1 } else { month += 1 }
     }
+}
+
+private struct CalendarDayItem: Identifiable {
+    let id: String
+    let day: Int
 }
 
 struct DayCellView: View {
