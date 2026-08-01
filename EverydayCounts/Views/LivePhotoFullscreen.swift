@@ -190,15 +190,27 @@ struct TimelineDetailPager: View {
     }
 
     var body: some View {
-        TabView(selection: $selectedIndex) {
-            ForEach(Array(entries.enumerated()), id: \.element.date) { index, entry in
-                LivePhotoFullscreen(entry: entry)
-                    .id(entry.date)
-                    .tag(index)
+        ZStack {
+            if entries.indices.contains(selectedIndex) {
+                LivePhotoFullscreen(entry: entries[selectedIndex])
+                    .id(entries[selectedIndex].date)
+            } else {
+                Color.black.ignoresSafeArea()
             }
+
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
         .background(Color.black)
         .ignoresSafeArea()
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 24)
+                .onEnded { value in
+                    guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                    if value.translation.width < 0, selectedIndex < entries.count - 1 {
+                        selectedIndex += 1
+                    } else if value.translation.width > 0, selectedIndex > 0 {
+                        selectedIndex -= 1
+                    }
+                }
+        )
     }
 }
