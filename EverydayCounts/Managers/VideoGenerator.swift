@@ -6,7 +6,8 @@ class VideoGenerator {
     static func generate(assets: [PHAsset], onProgress: @escaping (Double) -> Void) async throws -> URL {
         let outputURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString).appendingPathExtension("mp4")
-        let W = 1080, H = 1920
+        let W = Int(MediaPresentation.vlogSize.width)
+        let H = Int(MediaPresentation.vlogSize.height)
         let FPS: Int32 = 30
         let secsPerPhoto = 1.5
 
@@ -66,8 +67,21 @@ class VideoGenerator {
             space: CGColorSpaceCreateDeviceRGB(),
             bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
         )
+        ctx?.setFillColor(UIColor.black.cgColor)
+        ctx?.fill(CGRect(x: 0, y: 0, width: width, height: height))
         if let cgImage = image.cgImage {
-            ctx?.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+            let sourceWidth = CGFloat(cgImage.width)
+            let sourceHeight = CGFloat(cgImage.height)
+            let scale = max(CGFloat(width) / sourceWidth, CGFloat(height) / sourceHeight)
+            let drawWidth = sourceWidth * scale
+            let drawHeight = sourceHeight * scale
+            let drawRect = CGRect(
+                x: (CGFloat(width) - drawWidth) / 2,
+                y: (CGFloat(height) - drawHeight) / 2,
+                width: drawWidth,
+                height: drawHeight
+            )
+            ctx?.draw(cgImage, in: drawRect)
         }
         CVPixelBufferUnlockBaseAddress(buffer, [])
         return buffer

@@ -60,25 +60,14 @@ struct TodayView: View {
                         ZStack(alignment: .topTrailing) {
                             if entry.kind == .photo {
                                 if let movieURL = liveMovieURL {
-                                    LivePhotoMovieView(
-                                        url: movieURL,
-                                        videoGravity: .resizeAspectFill,
-                                        playTrigger: playTrigger
-                                    )
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 350)
-                                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                                    VlogFrameView(movieURL: movieURL, playTrigger: playTrigger)
                                     .onLongPressGesture(minimumDuration: 0.3) {
                                         playTrigger += 1
                                         hasShownLiveHint = true
                                     }
                                     if !hasShownLiveHint { Text("长按播放").font(.caption).foregroundStyle(.white.opacity(0.35)) }
                                 } else if let img = thumbnail {
-                                    Image(uiImage: img)
-                                        .resizable().scaledToFill()
-                                        .frame(maxWidth: .infinity)
-                                        .frame(height: 350)
-                                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                                    VlogFrameView(image: img)
                                 }
                             } else if entry.kind == .text {
                                 VStack(alignment: .leading, spacing: 8) {
@@ -92,15 +81,11 @@ struct TodayView: View {
                                 }
                                 .padding()
                                 .frame(maxWidth: .infinity)
-                                .aspectRatio(3.0 / 4.0, contentMode: .fit)
+                                .aspectRatio(MediaPresentation.vlogAspectRatio, contentMode: .fit)
                                 .background(Color.white.opacity(0.06))
                                 .clipShape(RoundedRectangle(cornerRadius: 16))
                             } else if entry.kind == .sketch, let img = thumbnail {
-                                Image(uiImage: img)
-                                    .resizable().scaledToFill()
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 350)
-                                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                                VlogFrameView(image: img)
                             }
                             if entry.kind == .photo && liveMovieURL != nil {
                                 Image(systemName: "livephoto")
@@ -422,6 +407,42 @@ struct TodayView: View {
         f.locale = Locale(identifier: "zh_CN")
         f.dateFormat = "M月d日 EEEE"
         return f.string(from: Date())
+    }
+}
+
+enum MediaPresentation {
+    static let vlogAspectRatio: CGFloat = 9.0 / 16.0
+    static let vlogSize = CGSize(width: 1080, height: 1920)
+}
+
+struct VlogFrameView: View {
+    var image: UIImage? = nil
+    var movieURL: URL? = nil
+    var playTrigger = 0
+    var autoplay = false
+    var cornerRadius: CGFloat = 16
+
+    var body: some View {
+        ZStack {
+            Color.black
+            if let movieURL {
+                LivePhotoMovieView(
+                    url: movieURL,
+                    videoGravity: .resizeAspectFill,
+                    playTrigger: playTrigger,
+                    autoplay: autoplay
+                )
+            } else if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                ProgressView().tint(.white)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .aspectRatio(MediaPresentation.vlogAspectRatio, contentMode: .fit)
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
     }
 }
 

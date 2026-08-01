@@ -35,15 +35,15 @@ struct CameraView: View {
                 }
                 .padding(.top, 8)
 
-                // Viewfinder — 4:3 ratio, pinch to zoom
+                // Viewfinder — 9:16 vlog framing guide, pinch to zoom
                 ZStack(alignment: .bottomTrailing) {
                     if let layer = camera.previewLayer {
                         GeometryReader { geo in
                             PreviewLayerView(layer: layer)
-                                .frame(width: geo.size.width, height: geo.size.width * 4 / 3)
+                                .frame(width: geo.size.width, height: geo.size.width / MediaPresentation.vlogAspectRatio)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
-                        .aspectRatio(3.0 / 4.0, contentMode: .fit)
+                        .aspectRatio(MediaPresentation.vlogAspectRatio, contentMode: .fit)
                         .gesture(
                             MagnificationGesture()
                                 .onChanged { scale in
@@ -56,13 +56,13 @@ struct CameraView: View {
                     } else {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color.white.opacity(0.05))
-                            .aspectRatio(3.0 / 4.0, contentMode: .fit)
+                            .aspectRatio(MediaPresentation.vlogAspectRatio, contentMode: .fit)
                     }
                     // Shutter flash overlay
                     if shutterFlash {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color.white.opacity(0.75))
-                            .aspectRatio(3.0 / 4.0, contentMode: .fit)
+                            .aspectRatio(MediaPresentation.vlogAspectRatio, contentMode: .fit)
                             .allowsHitTesting(false)
                     }
                     // Zoom label overlay
