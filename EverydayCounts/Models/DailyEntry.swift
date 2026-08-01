@@ -11,7 +11,9 @@ class DailyEntry {
 
     var date: String
     var assetIdentifier: String
-    var kindRaw: String
+    // Optional for lightweight migration from the original photo-only schema.
+    // Missing legacy values are treated as photo records.
+    var kindRaw: String?
     var noteText: String?
     var sketchPath: String?
     var createdAt: Date
@@ -32,7 +34,7 @@ class DailyEntry {
     }
 
     var kind: Kind {
-        get { Kind(rawValue: kindRaw) ?? .photo }
+        get { Kind(rawValue: kindRaw ?? Kind.photo.rawValue) ?? .photo }
         set { kindRaw = newValue.rawValue }
     }
 }
