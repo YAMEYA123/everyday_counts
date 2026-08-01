@@ -194,43 +194,68 @@ struct TodayView: View {
                             }
                         }
                     } else if canEditToday {
-                        VStack(spacing: 12) {
-                            Button { showCamera = true } label: {
-                                VStack(spacing: 16) {
-                                    Image(systemName: "camera.fill").font(.system(size: 48))
-                                    Text("记录这一刻").font(.headline)
+                        VStack(spacing: 18) {
+                            VStack(spacing: 10) {
+                                Image(systemName: "circle.dashed")
+                                    .font(.system(size: 30, weight: .light))
+                                    .foregroundStyle(.white.opacity(0.75))
+                                Text("记录今天")
+                                    .font(.system(size: 20, weight: .medium, design: .rounded))
+                                    .foregroundStyle(.white.opacity(0.92))
+                                Text("一张照片，留住此刻")
+                                    .font(.system(size: 13, design: .rounded))
+                                    .foregroundStyle(.white.opacity(0.4))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 220)
+                            .background(Color.white.opacity(0.045))
+                            .clipShape(RoundedRectangle(cornerRadius: 18))
+
+                            Button {
+                                showCamera = true
+                            } label: {
+                                Label("拍一张", systemImage: "camera.fill")
+                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 15)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.white)
+                            .foregroundStyle(.black)
+
+                            HStack(spacing: 0) {
+                                PhotosPicker(selection: $selectedPhoto, matching: .images, photoLibrary: .shared()) {
+                                    Label("从相册选", systemImage: "photo.on.rectangle")
                                 }
-                                .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
-                                .aspectRatio(3.0 / 4.0, contentMode: .fit)
-                                .background(Color.white.opacity(0.06))
-                                .clipShape(RoundedRectangle(cornerRadius: 16))
-                                .padding(.horizontal)
-                            }
 
-                            PhotosPicker(selection: $selectedPhoto, matching: .images, photoLibrary: .shared()) {
-                                HStack { Image(systemName: "photo.on.rectangle"); Text("从相册添加") }
-                                    .frame(maxWidth: .infinity).padding(.vertical, 12)
-                                    .background(Color.white.opacity(0.08))
-                                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    .padding(.horizontal)
-                            }
+                                Divider()
+                                    .frame(height: 18)
+                                    .overlay(Color.white.opacity(0.15))
 
-                            Button { showTextSheet = true } label: {
-                                HStack { Image(systemName: "text.alignleft"); Text("写一句") }
-                                    .frame(maxWidth: .infinity).padding(.vertical, 12)
-                                    .background(Color.white.opacity(0.08))
-                                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    .padding(.horizontal)
+                                Button {
+                                    showTextSheet = true
+                                } label: {
+                                    Label("写一句", systemImage: "text.alignleft")
+                                }
+                                .frame(maxWidth: .infinity)
+
+                                Divider()
+                                    .frame(height: 18)
+                                    .overlay(Color.white.opacity(0.15))
+
+                                Button {
+                                    showSketchSheet = true
+                                    sketchDrawing = PKDrawing()
+                                } label: {
+                                    Label("画一笔", systemImage: "paintbrush.fill")
+                                }
+                                .frame(maxWidth: .infinity)
                             }
-                            Button { showSketchSheet = true; sketchDrawing = PKDrawing() } label: {
-                                HStack { Image(systemName: "paintbrush.fill"); Text("画一笔") }
-                                    .frame(maxWidth: .infinity).padding(.vertical, 12)
-                                    .background(Color.white.opacity(0.08))
-                                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    .padding(.horizontal)
-                            }
+                            .font(.system(size: 13, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.58))
                         }
+                        .padding(.horizontal)
                     } else {
                         Text("今天已封存")
                             .font(.subheadline).foregroundStyle(.white.opacity(0.4))
