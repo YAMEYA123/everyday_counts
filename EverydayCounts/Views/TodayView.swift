@@ -39,20 +39,31 @@ struct TodayView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    HStack {
-                        Text(formattedDate())
-                            .font(.subheadline).foregroundStyle(.white.opacity(0.4))
+                    HStack(alignment: .bottom) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(formattedDate())
+                                .font(.title3.weight(.medium))
+                                .foregroundStyle(.white.opacity(0.9))
+                            Text("留住今天")
+                                .font(.caption)
+                                .foregroundStyle(.white.opacity(0.35))
+                        }
                         Spacer()
                         if streak > 0 {
-                            HStack(spacing: 4) {
+                            HStack(spacing: 5) {
                                 Text("✦")
-                                    .font(.system(size: 11)).foregroundStyle(.white.opacity(0.45))
+                                    .font(.system(size: 10))
                                 Text("连续 \(streak) 天")
-                                    .font(.subheadline).foregroundStyle(.white.opacity(0.55))
+                                    .font(.caption.weight(.medium))
                             }
+                            .foregroundStyle(.white.opacity(0.6))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 7)
+                            .background(Color.white.opacity(0.08))
+                            .clipShape(Capsule())
                         }
                     }
-                .padding(.horizontal)
+                    .padding(.horizontal)
 
                     if let entry = todayEntry {
                         ZStack(alignment: .topTrailing) {
@@ -71,7 +82,7 @@ struct TodayView: View {
                                         hasShownLiveHint = true
                                     }
                                     if !hasShownLiveHint {
-                                        Text("长按体验 Live Photo ✦")
+                                        Text("长按播放")
                                             .font(.caption).foregroundStyle(.white.opacity(0.35))
                                     }
                                 } else if let img = thumbnail {
@@ -131,13 +142,13 @@ struct TodayView: View {
                                         .foregroundStyle(.white.opacity(0.85))
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                 } else {
-                                    Text("还没有写下今天的心情")
+                                    Text("写下今天的一句话")
                                         .font(.subheadline)
                                         .foregroundStyle(.white.opacity(0.35))
                                 }
 
                                 HStack(spacing: 16) {
-                                    Button(entry.noteText?.isEmpty == false ? "编辑说明" : "写一句今天") {
+                                    Button(entry.noteText?.isEmpty == false ? "编辑" : "写一句") {
                                         captionDraft = entry.noteText ?? ""
                                         showCaptionSheet = true
                                     }
@@ -167,7 +178,7 @@ struct TodayView: View {
                         if canEditToday {
                             if entry.kind == .photo {
                                 HStack(spacing: 18) {
-                                    Button("重新拍摄") { showRetakeConfirm = true }
+                                    Button("重拍") { showRetakeConfirm = true }
                                     PhotosPicker(selection: $selectedPhoto, matching: .images, photoLibrary: .shared()) {
                                         Text("从相册替换")
                                     }
@@ -177,10 +188,10 @@ struct TodayView: View {
                                     Button("确定重拍", role: .destructive) { showCamera = true }
                                     Button("取消", role: .cancel) {}
                                 } message: {
-                                    Text("每天只有一次机会，确定要重拍吗？")
+                                    Text("今天的记录将被替换")
                                 }
                             } else {
-                                Button("重写内容") { showRetakeConfirm = true }
+                                Button("替换") { showRetakeConfirm = true }
                                     .font(.subheadline).foregroundStyle(.white.opacity(0.4))
                                     .confirmationDialog("今天的记录将被替换", isPresented: $showRetakeConfirm, titleVisibility: .visible) {
                                         Button("重拍照片", role: .destructive) { showCamera = true }
@@ -198,7 +209,7 @@ struct TodayView: View {
                             Button { showCamera = true } label: {
                                 VStack(spacing: 16) {
                                     Image(systemName: "camera.fill").font(.system(size: 48))
-                                    Text("拍照记录").font(.headline)
+                                    Text("记录这一刻").font(.headline)
                                 }
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
@@ -209,7 +220,7 @@ struct TodayView: View {
                             }
 
                             PhotosPicker(selection: $selectedPhoto, matching: .images, photoLibrary: .shared()) {
-                                HStack { Image(systemName: "photo.on.rectangle"); Text("从相册选择图片") }
+                                HStack { Image(systemName: "photo.on.rectangle"); Text("从相册添加") }
                                     .frame(maxWidth: .infinity).padding(.vertical, 12)
                                     .background(Color.white.opacity(0.08))
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -217,14 +228,14 @@ struct TodayView: View {
                             }
 
                             Button { showTextSheet = true } label: {
-                                HStack { Image(systemName: "text.alignleft"); Text("写文字补记") }
+                                HStack { Image(systemName: "text.alignleft"); Text("写一句") }
                                     .frame(maxWidth: .infinity).padding(.vertical, 12)
                                     .background(Color.white.opacity(0.08))
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
                                     .padding(.horizontal)
                             }
                             Button { showSketchSheet = true; sketchDrawing = PKDrawing() } label: {
-                                HStack { Image(systemName: "paintbrush.fill"); Text("白板补记") }
+                                HStack { Image(systemName: "paintbrush.fill"); Text("画一笔") }
                                     .frame(maxWidth: .infinity).padding(.vertical, 12)
                                     .background(Color.white.opacity(0.08))
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -232,14 +243,31 @@ struct TodayView: View {
                             }
                         }
                     } else {
-                        Text("今天已截止，当前时间已过编辑窗口")
+                        Text("今天已封存")
                             .font(.subheadline).foregroundStyle(.white.opacity(0.4))
                             .padding(.horizontal)
                     }
                 }
                 .padding(.top, 8)
             }
-            .background(Color.black)
+            .background {
+                ZStack {
+                    Color.black
+                    RadialGradient(
+                        colors: [Color.white.opacity(0.08), .clear],
+                        center: .top,
+                        startRadius: 10,
+                        endRadius: 420
+                    )
+                    LinearGradient(
+                        colors: [.clear, Color.black.opacity(0.8)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
+                .ignoresSafeArea()
+            }
+            .scrollIndicators(.hidden)
             .navigationTitle("今天")
             .navigationBarTitleDisplayMode(.large)
         }
