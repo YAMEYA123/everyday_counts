@@ -421,8 +421,8 @@ struct VlogFrameView: View {
     var movieURL: URL? = nil
     var playTrigger = 0
     var autoplay = false
-    var cornerRadius: CGFloat = 16
-    var maxHeight: CGFloat = 410
+    var cornerRadius: CGFloat = 20
+    var maxHeight: CGFloat = 460
 
     var body: some View {
         ZStack {
