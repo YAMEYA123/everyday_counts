@@ -197,7 +197,6 @@ struct TodayView: View {
                                 Text("今天的记录将被替换")
                             }
                         }
-                        }
                     } else if canEditToday {
                         VStack(spacing: 12) {
                             Button { showCamera = true } label: {
