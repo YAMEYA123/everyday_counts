@@ -4,6 +4,7 @@ import Photos
 import PhotosUI
 import AVFoundation
 import PencilKit
+import UIKit
 
 struct TodayView: View {
     @Environment(\.modelContext) private var context
@@ -382,6 +383,9 @@ struct SketchBoardSheet: View {
     @Binding var drawing: PKDrawing
     var onSavePNG: (Data) -> Void
     var onCancel: () -> Void
+    @State private var inkColor = Color.black
+    @State private var brushSize: CGFloat = 5
+    @State private var isErasing = false
 
     init(drawing: Binding<PKDrawing>, onSave: @escaping (Data) -> Void, onCancel: @escaping () -> Void) {
         self._drawing = drawing
@@ -392,36 +396,75 @@ struct SketchBoardSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
-                PencilCanvas(drawing: $drawing)
-                    .background(Color.white.opacity(0.02))
+                PencilCanvas(
+                    drawing: $drawing,
+                    color: inkColor,
+                    width: brushSize,
+                    isErasing: isErasing
+                )
+                    .background(Color.white)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
                             .strokeBorder(Color.white.opacity(0.18))
                     )
-                    .frame(minHeight: 300)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .frame(minHeight: 360)
 
-                HStack {
-                    Button("清空") {
-                        drawing = PKDrawing()
-                    }
-                    Spacer()
-                    Button("取消") { onCancel() }
-                        .foregroundStyle(.white.opacity(0.7))
+                HStack(spacing: 14) {
+                    ColorPicker("画笔", selection: $inkColor, supportsOpacity: false)
+                        .labelsHidden()
+                        .disabled(isErasing)
+
+                    Image(systemName: "circle.fill")
+                        .font(.system(size: 7))
+                        .foregroundStyle(.secondary)
+                    Slider(value: $brushSize, in: 1...18, step: 1)
+                    Image(systemName: "circle.fill")
+                        .font(.system(size: 17))
+                        .foregroundStyle(.secondary)
                 }
                 .padding(.horizontal, 4)
+
+                HStack(spacing: 12) {
+                    Button {
+                        isErasing.toggle()
+                    } label: {
+                        Label(isErasing ? "关闭橡皮擦" : "橡皮擦", systemImage: isErasing ? "pencil" : "eraser")
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button("清空", systemImage: "trash") {
+                        drawing = PKDrawing()
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.red)
+                }
+
+                Text("用一笔留下今天的痕迹")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             .padding()
             .background(Color.black)
             .navigationTitle("白板补记")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消") { onCancel() }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") {
                         let img = drawing.image(
                             from: CGRect(x: 0, y: 0, width: 1080, height: 1440),
                             scale: UIScreen.main.scale
                         )
-                        if let data = img.pngData() {
+                        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 1080, height: 1440))
+                        let composed = renderer.image { _ in
+                            UIColor.white.setFill()
+                            UIRectFill(CGRect(x: 0, y: 0, width: 1080, height: 1440))
+                            img.draw(in: CGRect(x: 0, y: 0, width: 1080, height: 1440))
+                        }
+                        if let data = composed.pngData() {
                             onSavePNG(data)
                         }
                     }
@@ -434,13 +477,16 @@ struct SketchBoardSheet: View {
 
 struct PencilCanvas: UIViewRepresentable {
     @Binding var drawing: PKDrawing
+    var color: Color = .black
+    var width: CGFloat = 5
+    var isErasing = false
 
     func makeUIView(context: Context) -> PKCanvasView {
         let canvas = PKCanvasView()
         canvas.drawing = drawing
         canvas.delegate = context.coordinator
-        canvas.backgroundColor = .clear
-        canvas.tool = PKInkingTool(.pen, color: .white, width: 4)
+        canvas.backgroundColor = .white
+        canvas.tool = makeTool()
         canvas.alwaysBounceVertical = true
         canvas.allowsFingerDrawing = true
         return canvas
@@ -450,6 +496,14 @@ struct PencilCanvas: UIViewRepresentable {
         if uiView.drawing != drawing {
             uiView.drawing = drawing
         }
+        uiView.tool = makeTool()
+    }
+
+    private func makeTool() -> PKTool {
+        if isErasing {
+            return PKEraserTool(.vector)
+        }
+        return PKInkingTool(.pen, color: UIColor(color), width: width)
     }
 
     func makeCoordinator() -> Coordinator {
