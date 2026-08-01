@@ -60,7 +60,11 @@ struct TodayView: View {
                         ZStack(alignment: .topTrailing) {
                             if entry.kind == .photo {
                                 if let movieURL = liveMovieURL {
-                                    VlogFrameView(movieURL: movieURL, playTrigger: playTrigger)
+                                    VlogFrameView(
+                                        movieURL: movieURL,
+                                        playTrigger: playTrigger,
+                                        showsLiveBadge: true
+                                    )
                                     .onLongPressGesture(minimumDuration: 0.3) {
                                         playTrigger += 1
                                         hasShownLiveHint = true
@@ -86,12 +90,6 @@ struct TodayView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 16))
                             } else if entry.kind == .sketch, let img = thumbnail {
                                 VlogFrameView(image: img)
-                            }
-                            if entry.kind == .photo && liveMovieURL != nil {
-                                Image(systemName: "livephoto")
-                                    .font(.system(size: 16, weight: .medium))
-                                    .foregroundStyle(.white.opacity(0.85))
-                                    .padding(10)
                             }
                             if entry.kind == .text {
                                 Text("✎")
@@ -425,6 +423,7 @@ struct VlogFrameView: View {
     var cornerRadius: CGFloat = 20
     var aspectRatio: CGFloat = MediaPresentation.todayAspectRatio
     var maxHeight: CGFloat = 460
+    var showsLiveBadge = false
 
     var body: some View {
         ZStack {
@@ -449,6 +448,14 @@ struct VlogFrameView: View {
         .overlay {
             RoundedRectangle(cornerRadius: cornerRadius)
                 .stroke(Color.white.opacity(0.16), lineWidth: 1)
+        }
+        .overlay(alignment: .topTrailing) {
+            if showsLiveBadge {
+                Image(systemName: "livephoto")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.85))
+                    .padding(10)
+            }
         }
         .frame(maxWidth: .infinity)
     }
