@@ -8,7 +8,7 @@ struct TimelineView: View {
     @StateObject private var store = EntryStore()
     @State private var year = Calendar.current.component(.year, from: Date())
     @State private var month = Calendar.current.component(.month, from: Date())
-    @Query(sort: \.date) private var allEntries: [DailyEntry]
+    @Query(sort: [SortDescriptor<DailyEntry>(\.date)]) private var allEntries: [DailyEntry]
     @State private var preview: DailyEntry?
 
     @State private var fillDate: String?
